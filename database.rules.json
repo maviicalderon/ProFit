@@ -1,0 +1,34 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "jobs": {
+      ".read": "auth != null",
+      "$jobId": {
+        ".write": "auth != null"
+      }
+    },
+    "likes": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "approvals": {
+      ".read": "auth != null",
+      "$jobId": {
+        "$employeeId": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "matches": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
