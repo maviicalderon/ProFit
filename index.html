@@ -3,144 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="Profit: conecte candidatos e empresas, publique vagas e encontre seu próximo match profissional." />
   <title>Profit | Rede Social de Empregos</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="background-glow"></div>
+  <div class="background-glow" aria-hidden="true"></div>
 
   <main class="container">
     <header class="topbar">
       <div class="brand">
-        <div class="logo">PF</div>
+        <div class="logo" aria-hidden="true">PF</div>
         <div>
           <h1>Profit</h1>
-          <p>Rede social Profit com match entre empregado e empregador</p>
+          <p data-i18n="brand.tagline">Rede social Profit com match entre empregado e empregador</p>
         </div>
       </div>
 
       <div class="topbar-controls">
-        <button id="btnLanguage" class="btn-icon" title="Mudar idioma">
-          <i class="bi bi-globe"></i>
+        <button id="btnLanguage" type="button" class="btn-icon" title="Mudar idioma" aria-label="Mudar idioma" data-i18n-title="controls.language" data-i18n-aria-label="controls.language">
+          <span aria-hidden="true">🌐</span>
           <span id="langText">EN</span>
         </button>
-        <button id="btnDarkMode" class="btn-icon" title="Modo escuro">
-          <i class="bi bi-moon"></i>
+        <button id="btnDarkMode" type="button" class="btn-icon" title="Alternar tema claro e escuro" aria-label="Alternar tema claro e escuro" aria-pressed="false" data-i18n-title="controls.theme" data-i18n-aria-label="controls.theme">
+          <span aria-hidden="true">☾</span>
         </button>
+        <button id="btnLogout" type="button" class="btn btn-outline hidden" data-i18n="logout">Sair</button>
       </div>
-
-      <button id="btnLogout" class="btn btn-outline hidden">Sair</button>
     </header>
 
-    <section id="authSection" class="auth-layout">
-      <div class="hero-card">
-        <h2>Conecte talentos e empresas em tempo real.</h2>
-        <p>
-          O empregado demonstra interesse em uma vaga. O empregador visualiza os interessados
-          e aprova o candidato. Quando os dois lados demonstram interesse, acontece o match.
-        </p>
+    <p id="appMessage" class="message" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p id="bootMessage" class="connection-status" role="status" aria-live="polite" data-i18n="boot.loading">Carregando conexão segura...</p>
+    <noscript><p class="message error">Ative o JavaScript no navegador para utilizar o Profit.</p></noscript>
 
+    <section id="authSection" class="auth-layout" aria-label="Acesso ao Profit">
+      <div class="hero-card">
+        <h2 data-i18n="hero.title">Conecte talentos e empresas em tempo real.</h2>
+        <p data-i18n="hero.description">O empregado demonstra interesse em uma vaga. O empregador visualiza os interessados e aprova o candidato. Quando os dois lados demonstram interesse, acontece o match.</p>
         <div class="steps">
-          <div><strong>1</strong><span>Crie sua conta</span></div>
-          <div><strong>2</strong><span>Escolha seu tipo de perfil</span></div>
-          <div><strong>3</strong><span>Publique ou candidate-se</span></div>
-          <div><strong>4</strong><span>Receba o match</span></div>
+          <div><strong>1</strong><span data-i18n="hero.step1">Crie sua conta</span></div>
+          <div><strong>2</strong><span data-i18n="hero.step2">Escolha seu tipo de perfil</span></div>
+          <div><strong>3</strong><span data-i18n="hero.step3">Publique ou candidate-se</span></div>
+          <div><strong>4</strong><span data-i18n="hero.step4">Receba o match</span></div>
         </div>
       </div>
 
       <div class="card auth-card">
-        <div class="tabs">
-          <button id="tabLogin" class="tab active">Entrar</button>
-          <button id="tabRegister" class="tab">Cadastrar</button>
-          <button id="tabReset" class="tab hidden">Recuperar Senha</button>
+        <div class="tabs" aria-label="Acesso">
+          <button id="tabLogin" type="button" class="tab active" aria-controls="loginForm" aria-pressed="true" data-i18n="auth.enter">Entrar</button>
+          <button id="tabRegister" type="button" class="tab" aria-controls="registerForm" aria-pressed="false" data-i18n="auth.register">Cadastrar</button>
+          <button id="tabReset" type="button" class="tab hidden" aria-controls="resetForm" aria-pressed="false" data-i18n="auth.reset">Recuperar Senha</button>
         </div>
 
-        <form id="loginForm" class="form">
-          <h2>Entrar</h2>
-
-          <label>
-            E-mail
-            <input id="loginEmail" type="email" placeholder="email@exemplo.com" required />
+        <form id="loginForm" class="form" aria-labelledby="loginTitle">
+          <h2 id="loginTitle" data-i18n="auth.enter">Entrar</h2>
+          <label for="loginEmail">
+            <span data-i18n="auth.email">E-mail</span>
+            <input id="loginEmail" maxlength="254" type="email" placeholder="email@exemplo.com" data-i18n-placeholder="auth.email.placeholder" autocomplete="username" required />
           </label>
-
-          <label>
-            Senha
-            <div class="password-field">
-              <input id="loginPassword" type="password" placeholder="Sua senha" required />
-              <button type="button" class="toggle-password" onclick="window.togglePasswordVisibility('loginPassword')">
-                <i class="bi bi-eye"></i>
-              </button>
-            </div>
+          <label for="loginPassword">
+            <span data-i18n="auth.password">Senha</span>
+            <span class="password-field">
+              <input id="loginPassword" type="password" placeholder="Sua senha" data-i18n-placeholder="auth.password.placeholder" autocomplete="current-password" required />
+              <button type="button" class="toggle-password" data-action="toggle-password" data-field="loginPassword" aria-label="Mostrar senha" aria-pressed="false" aria-controls="loginPassword" data-i18n-aria-label="auth.password.show"><span aria-hidden="true">👁</span></button>
+            </span>
           </label>
-
-          <button class="btn btn-primary" type="submit">Entrar</button>
-          <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 8px;" onclick="window.showForgotPassword()">Esqueci minha senha</button>
-          <p id="loginMessage" class="message"></p>
+          <button class="btn btn-primary" type="submit" data-i18n="auth.submit.login">Entrar</button>
+          <button type="button" class="btn btn-outline" data-action="forgot-password" data-i18n="auth.forgot">Esqueci minha senha</button>
+          <p id="loginMessage" class="message" role="status" aria-live="polite" aria-atomic="true"></p>
         </form>
 
-        <form id="registerForm" class="form hidden">
-          <h2>Criar conta</h2>
-
-          <label>
-            Nome completo / empresa
-            <input id="registerName" type="text" placeholder="Ex: Maria Silva ou Empresa Alfa" required />
+        <form id="registerForm" class="form hidden" aria-labelledby="registerTitle">
+          <h2 id="registerTitle" data-i18n="auth.create">Criar conta</h2>
+          <label for="registerName">
+            <span data-i18n="auth.name">Nome completo / empresa</span>
+            <input id="registerName" maxlength="160" type="text" placeholder="Ex: Maria Silva ou Empresa Alfa" data-i18n-placeholder="auth.name.placeholder" autocomplete="name" required />
           </label>
-
-          <label>
-            E-mail
-            <input id="registerEmail" type="email" placeholder="email@exemplo.com" required />
+          <label for="registerEmail">
+            <span data-i18n="auth.email">E-mail</span>
+            <input id="registerEmail" maxlength="254" type="email" placeholder="email@exemplo.com" data-i18n-placeholder="auth.email.placeholder" autocomplete="email" required />
           </label>
-
-          <label>
-            Telefone / WhatsApp
-            <input id="registerPhone" type="tel" placeholder="(11) 99999-9999" required />
+          <label for="registerPhone">
+            <span data-i18n="auth.phone">Telefone / WhatsApp</span>
+            <input id="registerPhone" maxlength="30" type="tel" placeholder="(11) 99999-9999" data-i18n-placeholder="auth.phone.placeholder" autocomplete="tel" inputmode="tel" required />
           </label>
-
-          <label>
-            Senha
-            <div class="password-field">
-              <input id="registerPassword" type="password" placeholder="Mínimo 6 caracteres" required />
-              <button type="button" class="toggle-password" onclick="window.togglePasswordVisibility('registerPassword')">
-                <i class="bi bi-eye"></i>
-              </button>
-            </div>
+          <label for="registerPassword">
+            <span data-i18n="auth.password">Senha</span>
+            <span class="password-field">
+              <input id="registerPassword" maxlength="4096" type="password" placeholder="Mínimo 6 caracteres" data-i18n-placeholder="auth.password.hint" autocomplete="new-password" minlength="6" required />
+              <button type="button" class="toggle-password" data-action="toggle-password" data-field="registerPassword" aria-label="Mostrar senha" aria-pressed="false" aria-controls="registerPassword" data-i18n-aria-label="auth.password.show"><span aria-hidden="true">👁</span></button>
+            </span>
           </label>
-
-          <label>
-            Tipo de usuário
+          <label for="registerType">
+            <span data-i18n="auth.type">Tipo de usuário</span>
             <select id="registerType" required>
-              <option value="employee">Empregado / candidato</option>
-              <option value="employer">Empregador / empresa</option>
+              <option value="employee" data-i18n="auth.type.employee">Empregado / candidato</option>
+              <option value="employer" data-i18n="auth.type.employer">Empregador / empresa</option>
             </select>
           </label>
-
-          <label>
-            Área de interesse ou atuação
-            <input id="registerArea" type="text" placeholder="Ex: Tecnologia, Administração, Vendas..." required />
+          <label for="registerArea">
+            <span data-i18n="auth.area">Área de interesse ou atuação</span>
+            <input id="registerArea" maxlength="160" type="text" placeholder="Ex: Tecnologia, Administração, Vendas..." data-i18n-placeholder="auth.area.placeholder" required />
           </label>
-
-          <label>
-            Mini bio
-            <textarea id="registerBio" rows="3" placeholder="Conte um pouco sobre você ou sua empresa"></textarea>
+          <label for="registerBio">
+            <span data-i18n="auth.bio">Mini bio</span>
+            <textarea id="registerBio" maxlength="3000" rows="3" placeholder="Conte um pouco sobre você ou sua empresa" data-i18n-placeholder="auth.bio.placeholder"></textarea>
           </label>
-
-          <button class="btn btn-primary" type="submit">Cadastrar</button>
-          <p id="registerMessage" class="message"></p>
+          <button class="btn btn-primary" type="submit" data-i18n="auth.submit.register">Cadastrar</button>
+          <p id="registerMessage" class="message" role="status" aria-live="polite" aria-atomic="true"></p>
         </form>
 
-        <form id="resetForm" class="form hidden">
-          <h2>Recuperar Senha</h2>
-          <p class="muted" style="margin-bottom: 10px;">Insira seu e-mail para receber um link de recuperação de senha.</p>
-
-          <label>
-            E-mail
-            <input id="resetEmail" type="email" placeholder="email@exemplo.com" required />
+        <form id="resetForm" class="form hidden" aria-labelledby="resetTitle">
+          <h2 id="resetTitle" data-i18n="auth.reset">Recuperar Senha</h2>
+          <p class="muted" data-i18n="auth.recover.hint">Insira seu e-mail para receber um link de recuperação de senha.</p>
+          <label for="resetEmail">
+            <span data-i18n="auth.email">E-mail</span>
+            <input id="resetEmail" maxlength="254" type="email" placeholder="email@exemplo.com" data-i18n-placeholder="auth.email.placeholder" autocomplete="email" required />
           </label>
-
-          <button class="btn btn-primary" type="submit">Enviar link</button>
-          <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 8px;" onclick="window.backToLogin()">Voltar</button>
-          <p id="resetMessage" class="message"></p>
+          <button class="btn btn-primary" type="submit" data-i18n="auth.submit.reset">Enviar link</button>
+          <button type="button" class="btn btn-outline" data-action="back-login" data-i18n="auth.back">Voltar</button>
+          <p id="resetMessage" class="message" role="status" aria-live="polite" aria-atomic="true"></p>
         </form>
       </div>
     </section>
@@ -148,73 +131,56 @@
     <section id="appSection" class="hidden">
       <section class="profile-summary card">
         <div>
-          <span id="profileTypeBadge" class="badge">Perfil</span>
+          <span id="profileTypeBadge" class="badge" data-i18n="profile.title">Perfil</span>
           <h2 id="profileName">---</h2>
           <p id="profileDetails">---</p>
         </div>
-
         <div class="stats">
-          <div>
-            <strong id="statJobs">0</strong>
-            <span>Vagas</span>
-          </div>
-          <div>
-            <strong id="statMatches">0</strong>
-            <span>Matches</span>
-          </div>
+          <div><strong id="statJobs">0</strong><span data-i18n="profile.jobs">Vagas</span></div>
+          <div><strong id="statMatches">0</strong><span data-i18n="profile.matches">Matches</span></div>
         </div>
       </section>
 
       <section id="employerPanel" class="grid-layout hidden">
         <div class="card">
-          <h2>Publicar vaga</h2>
-          <p class="muted">Somente empregadores podem criar vagas.</p>
-
-          <form id="jobForm" class="form">
+          <h2 id="jobFormTitle" data-i18n="jobs.publish">Publicar vaga</h2>
+          <p class="muted" data-i18n="jobs.only.employer">Somente empregadores podem publicar vagas.</p>
+          <form id="jobForm" class="form" aria-labelledby="jobFormTitle">
             <input type="hidden" id="jobId" />
-
-            <label>
-              Título da vaga
-              <input id="jobTitle" type="text" placeholder="Ex: Auxiliar Administrativo" required />
+            <label for="jobTitle">
+              <span data-i18n="jobs.title">Título da vaga</span>
+              <input id="jobTitle" maxlength="160" type="text" placeholder="Ex: Auxiliar Administrativo" data-i18n-placeholder="jobs.title.placeholder" required />
             </label>
-
-            <label>
-              Empresa
-              <input id="jobCompany" type="text" placeholder="Ex: Empresa Alfa" required />
+            <label for="jobCompany">
+              <span data-i18n="jobs.company">Empresa</span>
+              <input id="jobCompany" maxlength="160" type="text" placeholder="Ex: Empresa Alfa" data-i18n-placeholder="jobs.company.placeholder" autocomplete="organization" required />
             </label>
-
-            <label>
-              Área
-              <input id="jobArea" type="text" placeholder="Ex: Administração" required />
+            <label for="jobArea">
+              <span data-i18n="jobs.area">Área</span>
+              <input id="jobArea" maxlength="160" type="text" placeholder="Ex: Administração" data-i18n-placeholder="jobs.area.placeholder" required />
             </label>
-
-            <label>
-              Cidade / Modelo
-              <input id="jobLocation" type="text" placeholder="Ex: São José dos Campos / Remoto" required />
+            <label for="jobLocation">
+              <span data-i18n="jobs.location">Cidade / Modelo</span>
+              <input id="jobLocation" maxlength="200" type="text" placeholder="Ex: São José dos Campos / Remoto" data-i18n-placeholder="jobs.location.placeholder" required />
             </label>
-
-            <label>
-              Salário
-              <input id="jobSalary" type="text" placeholder="Ex: R$ 2.500,00" />
+            <label for="jobSalary">
+              <span data-i18n="jobs.salary">Salário</span>
+              <input id="jobSalary" maxlength="120" type="text" placeholder="Ex: R$ 2.500,00" data-i18n-placeholder="jobs.salary.placeholder" />
             </label>
-
-            <label>
-              Descrição
-              <textarea id="jobDescription" rows="5" placeholder="Descreva a vaga, requisitos e benefícios" required></textarea>
+            <label for="jobDescription">
+              <span data-i18n="jobs.description">Descrição</span>
+              <textarea id="jobDescription" maxlength="10000" rows="5" placeholder="Descreva a vaga, requisitos e benefícios" data-i18n-placeholder="jobs.description.placeholder" required></textarea>
             </label>
-
-            <button class="btn btn-primary" type="submit">Salvar vaga</button>
-            <p id="jobMessage" class="message"></p>
+            <button class="btn btn-primary" type="submit" data-i18n="jobs.save">Salvar vaga</button>
+            <button id="cancelJobEdit" class="btn btn-outline hidden" type="button" data-action="cancel-edit" data-i18n="jobs.cancel">Cancelar edição</button>
+            <p id="jobMessage" class="message" role="status" aria-live="polite" aria-atomic="true"></p>
           </form>
         </div>
-
         <div class="card">
-          <div class="section-title">
-            <div>
-              <h2>Interessados nas suas vagas</h2>
-              <p class="muted">Aprove candidatos para gerar match.</p>
-            </div>
-          </div>
+          <div class="section-title"><div>
+            <h2 data-i18n="applicants.title">Interessados nas suas vagas</h2>
+            <p class="muted" data-i18n="applicants.hint">Aprove candidatos para gerar match.</p>
+          </div></div>
           <div id="applicantsList" class="feed"></div>
         </div>
       </section>
@@ -222,41 +188,31 @@
       <section id="employeePanel" class="card hidden">
         <div class="section-title">
           <div>
-            <h2>Vagas disponíveis</h2>
-            <p class="muted">Clique em “Tenho interesse” para tentar um match com o empregador.</p>
+            <h2 data-i18n="jobs.available">Vagas disponíveis</h2>
+            <p class="muted" data-i18n="jobs.available.hint">Clique em “Tenho interesse” para tentar um match com o empregador.</p>
           </div>
-
-          <input id="searchJobs" class="search" type="search" placeholder="Buscar por cargo, área ou empresa..." />
+          <input id="searchJobs" class="search" type="search" aria-label="Buscar por cargo, área ou empresa" data-i18n-aria-label="jobs.search" placeholder="Buscar por cargo, área ou empresa..." data-i18n-placeholder="jobs.search" />
         </div>
-
         <div id="jobsFeed" class="feed"></div>
       </section>
 
       <section class="card">
-        <div class="section-title">
-          <div>
-            <h2>Matches confirmados</h2>
-            <p class="muted">Quando empregado e empregador demonstram interesse, o match aparece aqui.</p>
-          </div>
-        </div>
-
+        <div class="section-title"><div>
+          <h2 data-i18n="matches.title">Matches confirmados</h2>
+          <p class="muted" data-i18n="matches.hint">Quando empregado e empregador demonstram interesse, o match aparece aqui.</p>
+        </div></div>
         <div id="matchesList" class="feed"></div>
       </section>
 
       <section id="myJobsSection" class="card hidden">
-        <div class="section-title">
-          <div>
-            <h2>Minhas vagas publicadas</h2>
-            <p class="muted">Gerencie as vagas que você criou.</p>
-          </div>
-        </div>
-
+        <div class="section-title"><div>
+          <h2 data-i18n="jobs.my">Minhas vagas publicadas</h2>
+          <p class="muted" data-i18n="jobs.manage">Gerencie as vagas que você criou.</p>
+        </div></div>
         <div id="myJobsList" class="feed"></div>
       </section>
     </section>
   </main>
-
-  <script type="module" src="app.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
+  <script type="module" src="bootstrap.js"></script>
 </body>
 </html>

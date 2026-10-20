@@ -1,34 +1,138 @@
 {
   "rules": {
+    ".read": false,
+    ".write": false,
     "users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('type').val() == 'employer'",
       "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null && auth.uid == $uid"
+        ".read": "auth != null && (auth.uid == $uid || data.child('type').val() == 'employer')",
+        ".write": "auth != null && auth.uid == $uid && newData.exists() && (!data.exists() || (newData.child('uid').val() == data.child('uid').val() && newData.child('type').val() == data.child('type').val()))",
+        ".validate": "newData.hasChildren(['uid', 'name', 'email', 'phone', 'type', 'area'])",
+        "uid": {
+          ".validate": "newData.isString() && newData.val() == $uid"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+        },
+        "email": {
+          ".validate": "newData.isString() && newData.val().length > 3 && newData.val().length <= 254"
+        },
+        "phone": {
+          ".validate": "newData.isString() && newData.val().length >= 7 && newData.val().length <= 30"
+        },
+        "type": {
+          ".validate": "newData.val() == 'employee' || newData.val() == 'employer'"
+        },
+        "area": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+        },
+        "bio": {
+          ".validate": "newData.isString() && newData.val().length <= 3000"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        }
       }
     },
     "jobs": {
       ".read": "auth != null",
+      ".indexOn": [
+        "ownerId",
+        "createdAt"
+      ],
       "$jobId": {
-        ".write": "auth != null"
+        ".write": "auth != null && root.child('users').child(auth.uid).child('type').val() == 'employer' && ((!data.exists() && newData.child('ownerId').val() == auth.uid) || (data.child('ownerId').val() == auth.uid && (!newData.exists() || (newData.child('ownerId').val() == data.child('ownerId').val() && newData.child('id').val() == data.child('id').val()))))",
+        ".validate": "newData.hasChildren(['id', 'ownerId', 'title', 'company', 'area', 'location', 'description'])",
+        "id": {
+          ".validate": "newData.isString() && newData.val() == $jobId"
+        },
+        "ownerId": {
+          ".validate": "newData.isString() && newData.val() == auth.uid"
+        },
+        "ownerName": {
+          ".validate": "newData.isString() && newData.val().length <= 160"
+        },
+        "title": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+        },
+        "company": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+        },
+        "area": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+        },
+        "location": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
+        },
+        "salary": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "description": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 10000"
+        },
+        "active": {
+          ".validate": "newData.isBoolean()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        }
       }
     },
     "likes": {
-      "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null && auth.uid == $uid"
+      ".read": "auth != null && root.child('users').child(auth.uid).child('type').val() == 'employer'",
+      "$employeeId": {
+        ".read": "auth != null && auth.uid == $employeeId",
+        "$jobId": {
+          ".write": "auth != null && ((auth.uid == $employeeId && root.child('users').child(auth.uid).child('type').val() == 'employee' && (!newData.exists() || (root.child('jobs').child($jobId).exists() && root.child('jobs').child($jobId).child('active').val() != false))) || (!newData.exists() && root.child('users').child(auth.uid).child('type').val() == 'employer' && root.child('jobs').child($jobId).child('ownerId').val() == auth.uid))",
+          ".validate": "newData.hasChildren(['jobId', 'employeeId'])",
+          "jobId": {
+            ".validate": "newData.val() == $jobId"
+          },
+          "employeeId": {
+            ".validate": "newData.val() == $employeeId"
+          },
+          "employeeName": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
+        }
       }
     },
     "approvals": {
-      ".read": "auth != null",
       "$jobId": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('type').val() == 'employer' && root.child('jobs').child($jobId).child('ownerId').val() == auth.uid",
+        ".write": "auth != null && !newData.exists() && root.child('users').child(auth.uid).child('type').val() == 'employer' && root.child('jobs').child($jobId).child('ownerId').val() == auth.uid",
         "$employeeId": {
-          ".write": "auth != null"
+          ".read": "auth != null && auth.uid == $employeeId",
+          ".write": "auth != null && ((auth.uid == $employeeId && root.child('users').child(auth.uid).child('type').val() == 'employee' && !newData.exists()) || (root.child('users').child(auth.uid).child('type').val() == 'employer' && root.child('jobs').child($jobId).child('ownerId').val() == auth.uid && (!newData.exists() || (root.child('jobs').child($jobId).child('active').val() != false && root.child('likes').child($employeeId).child($jobId).exists()))))",
+          ".validate": "newData.hasChildren(['jobId', 'employeeId', 'employerId'])",
+          "jobId": {
+            ".validate": "newData.val() == $jobId"
+          },
+          "employeeId": {
+            ".validate": "newData.val() == $employeeId && root.child('users').child($employeeId).child('type').val() == 'employee'"
+          },
+          "employerId": {
+            ".validate": "newData.val() == auth.uid"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
         }
       }
     },
     "matches": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$jobId": {
+        ".write": "auth != null && !newData.exists() && root.child('users').child(auth.uid).child('type').val() == 'employer' && root.child('jobs').child($jobId).child('ownerId').val() == auth.uid",
+        "$employeeId": {
+          ".write": "auth != null && !newData.exists() && ((auth.uid == $employeeId && root.child('users').child(auth.uid).child('type').val() == 'employee') || (root.child('users').child(auth.uid).child('type').val() == 'employer' && root.child('jobs').child($jobId).child('ownerId').val() == auth.uid))"
+        }
+      }
     }
   }
 }

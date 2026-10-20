@@ -1,213 +1,84 @@
-# 🚀 Guia Rápido - Profit
+# Publicar e configurar o ProFit
 
-Bem-vindo ao Profit! Aqui está um resumo das novas funcionalidades implementadas.
+## 1. Conferir o projeto Firebase
 
-## Novas Funcionalidades
+A configuração pública fica em `firebase-config.js`. O projeto existente é `tcc-mavi`; `firebase.json` aponta para `database.rules.json` e `.firebaserc` identifica o projeto padrão.
 
-### 1. 📱 Telefone/WhatsApp
+No console do Firebase, abra o projeto correspondente. Não substitua a configuração por dados de outro projeto sem também atualizar a configuração de implantação.
 
-No cadastro, agora você precisa informar um telefone de contato:
+## 2. Ativar autenticação
 
-```
-Formato válido: (11) 99999-9999
-             ou 11999999999
-             ou 11 99999-9999
-```
+Em **Authentication → Sign-in method**, ative **Email/Password**.
 
-O telefone aparece em:
-- Seu perfil
-- Informações de candidatos (para o empregador)
-- Informações de matches (para ambos)
+Em **Authentication → Settings → Authorized domains**, inclua `maviicalderon.github.io`. Para testar localmente, confira também `localhost`. Se utilizar um domínio próprio, inclua-o nessa lista.
 
-### 2. 👁️ Mostrar/Esconder Senha
+## 3. Publicar as regras do banco
 
-Ao fazer login ou se cadastrar, clique no ícone 👁️ para ver/esconder a senha:
+1. Abra **Realtime Database → Rules** no mesmo projeto da URL presente em `firebase-config.js`.
+2. Copie o conteúdo completo de `database.rules.json`.
+3. Substitua as regras no editor e clique em **Publish**.
 
-```
-[████████████] 👁️  ← Clique aqui
-```
+Este passo publica permissões; não apaga os registros existentes. Ter o arquivo no GitHub não atualiza as regras do Firebase automaticamente. Uma mudança no frontend sem a correspondente configuração do banco pode causar mensagens de acesso negado.
 
-Animação smooth e intuitiva!
+## 4. Executar e verificar
 
-### 3. 🔑 Esqueci Minha Senha
+Na raiz do projeto:
 
-Na tela de login, clique em **"Esqueci minha senha"**:
-
-1. Insira seu email
-2. Clique em "Enviar link"
-3. Receberá um email do Firebase com link de recuperação
-4. Clique no link e defina uma nova senha
-
-### 4. ✅ Validação de Email
-
-O sistema verifica se o email já foi cadastrado:
-
-```
-❌ Erro: "Este e-mail já está cadastrado."
+```bash
+python3 -m http.server 8080
 ```
 
-Neste caso, você pode:
-- Usar outro email
-- Usar "Esqueci minha senha" se for sua conta
+Acesse <http://localhost:8080>. Não abra a página diretamente por `file://`.
 
-### 5. 🎨 Mensagens de Erro Melhoradas
+Para rodar as verificações sem escrever no banco de produção:
 
-As mensagens agora têm um design bonito e consistente:
-
-```
-Sucesso: ✓ Conta criada com sucesso!        (verde)
-Erro:    ⚠ Este e-mail já está cadastrado.  (vermelho)
-```
-
-Aparecem com animação e se adequam ao padrão visual do app.
-
-### 6. 📧 Email de Match (Opcional)
-
-Quando um match é confirmado, o **empregador recebe um email automaticamente** com:
-
-- Nome do candidato
-- Email do candidato
-- Telefone do candidato
-- Dados da vaga
-
-**Para ativar esta funcionalidade:**
-1. Siga o guia em `EMAIL_SETUP.md`
-2. Configure suas credenciais do EmailJS
-3. Pronto! Emails serão enviados automaticamente
-
-Se não quiser configurar, tudo continua funcionando normalmente!
-
-## Segurança - Hash de Senhas
-
-**Boas notícias:** Sua senha é totalmente segura!
-
-Firebase Authentication usa **bcrypt + salt** para proteger senhas:
-
-- ✅ Senhas com hash (Firebase faz automaticamente)
-- ✅ Transmissão segura (HTTPS)
-- ✅ Tokens gerenciados automaticamente
-- ✅ Recuperação segura de senha
-
-**Você não precisa fazer nada especial!**
-
-Detalhes técnicos em `SECURITY.md`.
-
-## Fluxo de Uso
-
-### Para Empregado/Candidato
-
-```
-1. Cadastre-se com seu email e telefone
-2. Escolha "Empregado/Candidato"
-3. Veja as vagas disponíveis
-4. Clique em "Tenho interesse" nas vagas que gostou
-5. Quando o empregador aprovar, aparece "Match confirmado"
-6. Envie uma mensagem ou ligue para o contato
+```bash
+npm ci
+npm test
+npm run check
+npm --prefix tests/rules ci
+npm run test:rules
 ```
 
-### Para Empregador/Empresa
+Os três primeiros comandos exigem Node.js/npm. Os testes de regras também exigem Java e usam o emulador Firebase com o projeto `demo-profit`.
 
-```
-1. Cadastre-se com seu email e telefone
-2. Escolha "Empregador/Empresa"
-3. Clique em "Publicar vaga"
-4. Preencha os dados da vaga e publique
-5. Veja candidatos interessados em "Interessados nas suas vagas"
-6. Clique "Aprovar candidato" para fazer match
-7. Quando aprovar, envie um email (automático se configurado)
-8. Candidate: Entre em contato via telefone/email
-```
+## 5. Ativar GitHub Pages
 
-## Estrutura de Dados
+Depois de enviar os arquivos corrigidos ao repositório:
 
-Cada usuário agora armazena:
+1. Abra **Settings → Pages** no GitHub.
+2. Em **Build and deployment**, escolha **Deploy from a branch**.
+3. Selecione a branch **main**, pasta **/(root)** e salve.
+4. Aguarde a implantação e confira o endereço informado pelo GitHub.
 
-```json
-{
-  "uid": "id_único",
-  "name": "Seu Nome",
-  "email": "email@exemplo.com",
-  "phone": "(11) 99999-9999",        ← NOVO
-  "type": "employee" ou "employer",
-  "area": "Tecnologia",
-  "bio": "Sua bio",
-  "createdAt": 1234567890
-}
-```
+Para `maviicalderon/ProFit`, a URL esperada depois da ativação é <https://maviicalderon.github.io/ProFit/>. Este documento não confirma que o Pages já esteja ativo.
 
-## Problemas Comuns
+## 6. Conferir os fluxos com contas de teste
 
-### "Telefone inválido"
+Use duas sessões separadas de navegador, uma para cada papel. Ao executar esta conferência no site publicado, as contas e registros são reais no projeto configurado.
 
-Formato aceito:
-- ✅ (11) 99999-9999
-- ✅ 11999999999
-- ✅ 11 99999-9999
-- ❌ 1199999999 (muito curto)
-- ❌ abc123 (não numérico)
+1. Cadastre uma empresa, publique uma vaga e confira os dados salvos.
+2. Cadastre um candidato na outra sessão, busque a vaga e clique em **Tenho interesse**.
+3. Na empresa, confira o candidato e clique em **Aprovar candidato**.
+4. Confira o match e os contatos nas duas sessões.
+5. Remova o interesse ou a aprovação e confira que o match desaparece em ambas.
+6. Edite uma vaga, cancele a edição e confira que os dados não foram alterados.
+7. Exclua uma vaga própria e confira que ela desaparece das listas.
+8. Troque idioma e tema, teste no celular, saia da conta e entre com outro usuário.
+9. Teste a recuperação de senha com uma caixa de e-mail à qual você tenha acesso.
 
-### "Este e-mail já está cadastrado"
+Se uma conta existente não tiver perfil no banco, o aplicativo permite completar o perfil após o login. Não é necessário criar outra conta com o mesmo e-mail.
 
-Significa que o email já foi usado. Opções:
-1. Use outro email
-2. Clique em "Esqueci minha senha" se for sua conta
-3. Entre em contato com suporte
+## Mensagens comuns
 
-### "Erro ao enviar email"
+| Situação | O que conferir |
+| --- | --- |
+| Falha ao carregar o site | Conexão e acesso aos módulos Firebase; recarregue a página |
+| Cadastro/login indisponível | Email/Password ativado e configuração correta do Firebase |
+| Domínio não autorizado | Domínio da hospedagem na lista de Authentication |
+| Acesso negado ao banco | Regras publicadas no projeto e banco correspondentes |
+| E-mail já cadastrado | Entre na conta existente ou utilize recuperação de senha |
+| E-mail de recuperação não chegou | Endereço informado, spam e configurações do Firebase Authentication |
+| Match não apareceu | A vaga precisa existir e ter interesse e aprovação para o mesmo candidato |
 
-1. Verifique sua conexão com internet
-2. Se EmailJS não estiver configurado, isso é normal (não crítico)
-3. Verifique `EMAIL_SETUP.md` para configurar
-
-### "Senha não aparece como digitada"
-
-Isso é **normal e seguro**! Senhas são ocultadas por padrão. Clique em 👁️ para ver.
-
-## Dicas de Segurança
-
-1. **Use senhas fortes**: Mínimo 6 caracteres (recomendado: 8+)
-2. **Nunca compartilhe sua senha**: Profit nunca pedirá
-3. **Logout ao sair**: Clique em "Sair" quando terminar
-4. **Verifique o email**: Certifique-se que é o correto
-
-## Suporte
-
-### Dúvidas sobre EmailJS?
-
-Veja `EMAIL_SETUP.md` para configuração passo a passo.
-
-### Dúvidas sobre Segurança?
-
-Veja `SECURITY.md` para detalhes técnicos.
-
-### Dúvidas sobre o Projeto?
-
-Veja `README.md` para informações completas.
-
-## Resumo das Mudanças
-
-| Funcionalidade | Antes | Depois |
-|---|---|---|
-| Telefone | ❌ | ✅ Obrigatório |
-| Toggle Senha | ❌ | ✅ Com animação |
-| Recuperar Senha | ❌ | ✅ Implementado |
-| Validação Email | Básica | ✅ Em tempo real |
-| Mensagens | Simples | ✅ Estilizadas |
-| Notificação Match | ❌ | ✅ Email (opcional) |
-| Telefone exibido | ❌ | ✅ Em todo lugar |
-
-## Próximas Melhorias Possíveis
-
-- [ ] Autenticação de dois fatores (2FA)
-- [ ] Upload de foto de perfil
-- [ ] Chat integrado
-- [ ] Notificações push
-- [ ] Dark mode
-- [ ] Filtros avançados de vagas
-- [ ] Avaliações e comentários
-
----
-
-**Aproveite o Profit!** 🎉
-
-Para mais informações, consulte os arquivos de documentação na pasta do projeto.
+E-mails de notificação de match não estão implementados; a confirmação aparece em tempo real na interface.

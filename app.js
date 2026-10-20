@@ -1,983 +1,569 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
 import {
-  getDatabase,
-  ref,
-  set,
-  push,
-  update,
-  remove,
-  onValue,
-  get,
-  serverTimestamp
+  getDatabase, ref, set, push, update, onValue, get, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBOervBrr9U6id1e3SvQCp5WFmtYRftJ6A",
-  authDomain: "tcc-mavi.firebaseapp.com",
-  databaseURL: "https://tcc-mavi-default-rtdb.firebaseio.com",
-  projectId: "tcc-mavi",
-  storageBucket: "tcc-mavi.firebasestorage.app",
-  messagingSenderId: "758013937555",
-  appId: "1:758013937555:web:62f8eac4f1b6545dbf4a66"
-};
+import { firebaseConfig } from "./firebase-config.js";
+import { translations } from "./i18n.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-
-// Inicializar EmailJS (configure com seus dados no console do EmailJS)
-// emailjs.init("YOUR_PUBLIC_KEY");
-const EMAILJS_SERVICE_ID = "service_profit";
-const EMAILJS_TEMPLATE_ID = "template_match_notification";
-const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY_HERE";
-
 const $ = (id) => document.getElementById(id);
+const elements = Object.fromEntries([
+  "authSection", "appSection", "btnLogout", "tabLogin", "tabRegister", "tabReset",
+  "loginForm", "registerForm", "resetForm", "loginMessage", "registerMessage",
+  "resetMessage", "profileTypeBadge", "profileName", "profileDetails", "statJobs",
+  "statMatches", "employerPanel", "employeePanel", "myJobsSection", "jobForm",
+  "jobMessage", "jobsFeed", "applicantsList", "matchesList", "myJobsList", "searchJobs",
+  "appMessage", "bootMessage", "jobFormTitle", "cancelJobEdit"
+].map((id) => [id, $(id)]));
 
-// Sistema de Tradução
-const translations = {
-  pt: {
-    // Auth
-    "auth.enter": "Entrar",
-    "auth.register": "Cadastrar",
-    "auth.reset": "Recuperar Senha",
-    "auth.email": "E-mail",
-    "auth.password": "Senha",
-    "auth.phone": "Telefone / WhatsApp",
-    "auth.submit.login": "Entrar",
-    "auth.submit.register": "Cadastrar",
-    "auth.submit.reset": "Enviar link",
-    "auth.forgot": "Esqueci minha senha",
-    "auth.back": "Voltar",
-    "auth.name": "Nome completo / empresa",
-    "auth.password.hint": "Mínimo 6 caracteres",
-    "auth.type": "Tipo de usuário",
-    "auth.type.employee": "Empregado / candidato",
-    "auth.type.employer": "Empregador / empresa",
-    "auth.area": "Área de interesse ou atuação",
-    "auth.bio": "Mini bio",
-    "auth.recover.hint": "Insira seu e-mail para receber um link de recuperação de senha.",
-    "profile.edit": "Editar",
-    "profile.delete": "Excluir",
-    "profile.jobs": "Vagas",
-    "profile.matches": "Matches",
-    "jobs.publish": "Publicar vaga",
-    "jobs.title": "Título da vaga",
-    "jobs.company": "Empresa",
-    "jobs.area": "Área",
-    "jobs.location": "Cidade / Modelo",
-    "jobs.salary": "Salário",
-    "jobs.description": "Descrição",
-    "jobs.save": "Salvar vaga",
-    "jobs.search": "Buscar por cargo, área ou empresa...",
-    "jobs.interested": "Tenho interesse",
-    "jobs.remove.interested": "Remover interesse",
-    "jobs.approved": "Empresa aprovou você",
-    "jobs.matched": "🎉 Match confirmado",
-    "jobs.my": "Minhas vagas publicadas",
-    "jobs.manage": "Gerencie as vagas que você criou.",
-    "jobs.no.published": "Você ainda não publicou vagas.",
-    "jobs.available": "Vagas disponíveis",
-    "jobs.available.hint": "Clique em 'Tenho interesse' para tentar um match com o empregador.",
-    "jobs.not.found": "Nenhuma vaga encontrada.",
-    "jobs.only.employer": "Somente empregadores podem publicar vagas.",
-    "jobs.required": "Preencha os campos obrigatórios da vaga.",
-    "jobs.saved": "Vaga atualizada com sucesso!",
-    "jobs.published": "Vaga publicada com sucesso!",
-    "jobs.error": "Erro ao salvar vaga.",
-    "applicants.title": "Interessados nas suas vagas",
-    "applicants.hint": "Aprove candidatos para gerar match.",
-    "applicants.no": "Ainda não há interessados nas suas vagas.",
-    "applicants.approve": "Aprovar candidato",
-    "applicants.remove": "Remover aprovação",
-    "matches.title": "Matches confirmados",
-    "matches.hint": "Quando empregado e empregador demonstram interesse, o match aparece aqui.",
-    "matches.no": "Nenhum match confirmado ainda.",
-    "matches.candidate": "Candidato",
-    "matches.company": "Empresa",
-    "matches.contact": "Entre em contato",
-    "logout": "Sair",
-    "errors.filled": "Preencha todos os campos obrigatórios.",
-    "errors.invalid.phone": "Telefone inválido. Use formato: (11) 99999-9999",
-    "errors.email.exists": "Este e-mail já está cadastrado.",
-    "errors.email.invalid": "E-mail inválido.",
-    "errors.password.weak": "A senha deve ter pelo menos 6 caracteres.",
-    "errors.user.not.found": "Usuário não encontrado.",
-    "errors.password.wrong": "Senha incorreta.",
-    "errors.invalid.credential": "E-mail ou senha incorretos.",
-    "errors.network": "Falha de conexão. Verifique sua internet.",
-    "errors.too.many": "Muitas tentativas. Tente novamente mais tarde.",
-    "errors.only.employer": "Apenas empregadores podem aprovar candidatos.",
-    "errors.only.yours": "Você só pode aprovar candidatos das suas próprias vagas.",
-    "success.account.created": "Conta criada com sucesso!",
-    "success.password.reset": "E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.",
-    "success.vaga.published": "Vaga publicada com sucesso!",
-    "success.vaga.updated": "Vaga atualizada com sucesso!",
-    "confirm.delete": "Tem certeza que deseja excluir esta vaga?"
-  },
-  en: {
-    // Auth
-    "auth.enter": "Sign In",
-    "auth.register": "Sign Up",
-    "auth.reset": "Reset Password",
-    "auth.email": "Email",
-    "auth.password": "Password",
-    "auth.phone": "Phone / WhatsApp",
-    "auth.submit.login": "Sign In",
-    "auth.submit.register": "Sign Up",
-    "auth.submit.reset": "Send Link",
-    "auth.forgot": "Forgot my password",
-    "auth.back": "Back",
-    "auth.name": "Full name / company",
-    "auth.password.hint": "Minimum 6 characters",
-    "auth.type": "User type",
-    "auth.type.employee": "Employee / candidate",
-    "auth.type.employer": "Employer / company",
-    "auth.area": "Area of interest",
-    "auth.bio": "Mini bio",
-    "auth.recover.hint": "Enter your email to receive a password recovery link.",
-    "profile.edit": "Edit",
-    "profile.delete": "Delete",
-    "profile.jobs": "Jobs",
-    "profile.matches": "Matches",
-    "jobs.publish": "Post a Job",
-    "jobs.title": "Job Title",
-    "jobs.company": "Company",
-    "jobs.area": "Area",
-    "jobs.location": "City / Model",
-    "jobs.salary": "Salary",
-    "jobs.description": "Description",
-    "jobs.save": "Save Job",
-    "jobs.search": "Search by job, area or company...",
-    "jobs.interested": "I'm Interested",
-    "jobs.remove.interested": "Remove Interest",
-    "jobs.approved": "Company approved you",
-    "jobs.matched": "🎉 Match confirmed",
-    "jobs.my": "My Posted Jobs",
-    "jobs.manage": "Manage the jobs you created.",
-    "jobs.no.published": "You haven't posted any jobs yet.",
-    "jobs.available": "Available Jobs",
-    "jobs.available.hint": "Click 'I'm Interested' to try a match with the employer.",
-    "jobs.not.found": "No jobs found.",
-    "jobs.only.employer": "Only employers can post jobs.",
-    "jobs.required": "Fill in the required job fields.",
-    "jobs.saved": "Job updated successfully!",
-    "jobs.published": "Job posted successfully!",
-    "jobs.error": "Error saving job.",
-    "applicants.title": "Interested in Your Jobs",
-    "applicants.hint": "Approve candidates to generate a match.",
-    "applicants.no": "No interested candidates yet.",
-    "applicants.approve": "Approve Candidate",
-    "applicants.remove": "Remove Approval",
-    "matches.title": "Confirmed Matches",
-    "matches.hint": "When employee and employer show interest, the match appears here.",
-    "matches.no": "No confirmed matches yet.",
-    "matches.candidate": "Candidate",
-    "matches.company": "Company",
-    "matches.contact": "Contact",
-    "logout": "Sign Out",
-    "errors.filled": "Fill in all required fields.",
-    "errors.invalid.phone": "Invalid phone. Use format: (11) 99999-9999",
-    "errors.email.exists": "This email is already registered.",
-    "errors.email.invalid": "Invalid email.",
-    "errors.password.weak": "Password must be at least 6 characters.",
-    "errors.user.not.found": "User not found.",
-    "errors.password.wrong": "Wrong password.",
-    "errors.invalid.credential": "Invalid email or password.",
-    "errors.network": "Connection failed. Check your internet.",
-    "errors.too.many": "Too many attempts. Try again later.",
-    "errors.only.employer": "Only employers can approve candidates.",
-    "errors.only.yours": "You can only approve candidates from your own jobs.",
-    "success.account.created": "Account created successfully!",
-    "success.password.reset": "Recovery email sent successfully! Check your inbox.",
-    "success.vaga.published": "Job posted successfully!",
-    "success.vaga.updated": "Job updated successfully!",
-    "confirm.delete": "Are you sure you want to delete this job?"
-  }
+const preferences = {
+  get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(key, String(value)); } catch { /* Storage may be blocked. */ } }
 };
-
-let currentLanguage = localStorage.getItem("profit_language") || "pt";
-
-function t(key) {
-  return translations[currentLanguage][key] || key;
-}
-
-function setLanguage(lang) {
-  currentLanguage = lang;
-  localStorage.setItem("profit_language", lang);
-  document.documentElement.lang = lang;
-  document.getElementById("langText").textContent = lang.toUpperCase();
-  updateAllText();
-}
-
-function loadPreferences() {
-  const isDarkMode = localStorage.getItem("profit_dark_mode") === "true";
-  if (isDarkMode) {
-    document.documentElement.classList.add("dark-mode");
-  }
-}
-
-window.toggleDarkMode = () => {
-  const isDark = document.documentElement.classList.toggle("dark-mode");
-  localStorage.setItem("profit_dark_mode", isDark);
-};
-
-const $ = (id) => document.getElementById(id);
-
-const elements = {
-  authSection: $("authSection"),
-  appSection: $("appSection"),
-  btnLogout: $("btnLogout"),
-
-  tabLogin: $("tabLogin"),
-  tabRegister: $("tabRegister"),
-  tabReset: $("tabReset"),
-  loginForm: $("loginForm"),
-  registerForm: $("registerForm"),
-  resetForm: $("resetForm"),
-  loginMessage: $("loginMessage"),
-  registerMessage: $("registerMessage"),
-  resetMessage: $("resetMessage"),
-
-  profileTypeBadge: $("profileTypeBadge"),
-  profileName: $("profileName"),
-  profileDetails: $("profileDetails"),
-  statJobs: $("statJobs"),
-  statMatches: $("statMatches"),
-
-  employerPanel: $("employerPanel"),
-  employeePanel: $("employeePanel"),
-  myJobsSection: $("myJobsSection"),
-
-  jobForm: $("jobForm"),
-  jobMessage: $("jobMessage"),
-  jobsFeed: $("jobsFeed"),
-  applicantsList: $("applicantsList"),
-  matchesList: $("matchesList"),
-  myJobsList: $("myJobsList"),
-  searchJobs: $("searchJobs")
-};
-
+let currentLanguage = preferences.get("profit_language") === "en" ? "en" : "pt";
 let currentUser = null;
 let currentProfile = null;
 let allUsers = {};
 let allJobs = {};
 let allLikes = {};
 let allApprovals = {};
-let allMatches = {};
+let jobsLoaded = false;
+let usersLoaded = false;
+let likesLoaded = false;
+let authEpoch = 0;
+let registrationGate = null;
+let renderQueued = false;
+const subscriptions = [];
+const approvalSubscriptions = new Map();
+const contactSubscriptions = new Map();
+const pendingActions = new Set();
 
-function showMessage(element, text, type = "success") {
-  // Traduzir a mensagem se for uma chave de tradução
-  const translatedText = translations[currentLanguage][text] || text;
-  element.textContent = translatedText;
-  element.className = `message ${type}`;
+function t(key) { return translations[currentLanguage][key] ?? translations.pt[key] ?? key; }
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  })[character]);
 }
-
+function isRecord(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
+function records(value) { return isRecord(value) ? value : {}; }
+function showMessage(element, key = "", type = "success") {
+  if (!element) return;
+  element.dataset.messageKey = key;
+  element.textContent = key ? t(key) : "";
+  element.className = `message ${key ? type : ""}`.trim();
+  element.setAttribute("role", type === "error" ? "alert" : "status");
+}
 function clearMessages() {
-  showMessage(elements.loginMessage, "", "success");
-  showMessage(elements.registerMessage, "", "success");
-  showMessage(elements.jobMessage, "", "success");
-  showMessage(elements.resetMessage, "", "success");
+  [elements.loginMessage, elements.registerMessage, elements.resetMessage, elements.jobMessage, elements.appMessage]
+    .forEach((element) => showMessage(element));
 }
-
+function errorKey(error) {
+  const code = String(error?.code ?? "").toLowerCase();
+  if (code.includes("permission_denied") || code.includes("permission-denied")) return "errors.permission";
+  return ({
+    "auth/email-already-in-use": "errors.email.exists", "auth/invalid-email": "errors.email.invalid",
+    "auth/weak-password": "errors.password.weak", "auth/missing-password": "errors.password.weak",
+    "auth/user-not-found": "errors.invalid.credential", "auth/wrong-password": "errors.invalid.credential",
+    "auth/invalid-credential": "errors.invalid.credential", "auth/network-request-failed": "errors.network",
+    "auth/too-many-requests": "errors.too.many", "auth/user-disabled": "errors.user.disabled",
+    "auth/operation-not-allowed": "errors.auth.disabled", "auth/unauthorized-domain": "errors.domain",
+    "auth/invalid-api-key": "errors.config", "auth/configuration-not-found": "errors.config"
+  })[code] || "errors.generic";
+}
+function setBusy(form, busy) {
+  form.setAttribute("aria-busy", String(busy));
+  form.querySelectorAll("button[type='submit']").forEach((button) => { button.disabled = busy; });
+}
 function setAuthTab(tab) {
   clearMessages();
-
-  if (tab === "login") {
-    elements.tabLogin.classList.add("active");
-    elements.tabRegister.classList.remove("active");
-    elements.tabReset.classList.add("hidden");
-    elements.loginForm.classList.remove("hidden");
-    elements.registerForm.classList.add("hidden");
-    elements.resetForm.classList.add("hidden");
-  } else if (tab === "register") {
-    elements.tabRegister.classList.add("active");
-    elements.tabLogin.classList.remove("active");
-    elements.tabReset.classList.add("hidden");
-    elements.registerForm.classList.remove("hidden");
-    elements.loginForm.classList.add("hidden");
-    elements.resetForm.classList.add("hidden");
-  } else if (tab === "reset") {
-    elements.tabReset.classList.add("active");
-    elements.tabLogin.classList.remove("active");
-    elements.tabRegister.classList.remove("active");
-    elements.tabReset.classList.remove("hidden");
-    elements.resetForm.classList.remove("hidden");
-    elements.loginForm.classList.add("hidden");
-    elements.registerForm.classList.add("hidden");
+  for (const name of ["login", "register", "reset"]) {
+    const selected = tab === name;
+    elements[`${name}Form`].classList.toggle("hidden", !selected);
+    const button = elements[`tab${name[0].toUpperCase()}${name.slice(1)}`];
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  }
+  elements.tabReset.classList.toggle("hidden", tab !== "reset");
+}
+function updateAllText() {
+  document.documentElement.lang = currentLanguage === "pt" ? "pt-BR" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((element) => { element.textContent = t(element.dataset.i18n); });
+  for (const [data, attribute] of [["i18nPlaceholder", "placeholder"], ["i18nAriaLabel", "aria-label"], ["i18nTitle", "title"]]) {
+    document.querySelectorAll(`[data-${data.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}]`).forEach((element) => {
+      element.setAttribute(attribute, t(element.dataset[data]));
+    });
+  }
+  document.querySelectorAll("[data-message-key]").forEach((element) => {
+    element.textContent = element.dataset.messageKey ? t(element.dataset.messageKey) : "";
+  });
+  $("langText").textContent = currentLanguage === "pt" ? "EN" : "PT";
+  document.querySelectorAll("[data-action='toggle-password']").forEach(updatePasswordButton);
+  renderProfile();
+  updateEditTitle();
+  renderAll();
+}
+function setLanguage(lang) {
+  currentLanguage = lang;
+  preferences.set("profit_language", lang);
+  updateAllText();
+}
+function updateThemeButton() {
+  const dark = document.documentElement.classList.contains("dark-mode");
+  $("btnDarkMode").setAttribute("aria-pressed", String(dark));
+  const icon = $("btnDarkMode").querySelector("[aria-hidden]");
+  if (icon) icon.textContent = dark ? "☀" : "☾";
+}
+function updatePasswordButton(button) {
+  const visible = $(button.dataset.field)?.type === "text";
+  button.setAttribute("aria-pressed", String(visible));
+  button.setAttribute("aria-label", t(visible ? "auth.password.hide" : "auth.password.show"));
+  button.classList.toggle("active", visible);
+}
+function queueRender() {
+  if (renderQueued) return;
+  renderQueued = true;
+  queueMicrotask(() => { renderQueued = false; renderAll(); });
+}
+function watch(path, callback, onError) {
+  const epoch = authEpoch;
+  let active = true;
+  const unsubscribe = onValue(ref(db, path), (snapshot) => {
+    if (active && epoch === authEpoch && currentUser) callback(snapshot);
+  }, (error) => {
+    if (!active || epoch !== authEpoch || !currentUser) return;
+    console.error(`Falha na leitura de ${path}:`, error.code);
+    onError?.();
+    showMessage(elements.appMessage, errorKey(error), "error");
+  });
+  return () => { active = false; unsubscribe(); };
+}
+function stopSession() {
+  subscriptions.splice(0).forEach((unsubscribe) => unsubscribe());
+  for (const unsubscribe of approvalSubscriptions.values()) unsubscribe();
+  for (const unsubscribe of contactSubscriptions.values()) unsubscribe();
+  approvalSubscriptions.clear();
+  contactSubscriptions.clear();
+  currentProfile = null;
+  allUsers = {}; allJobs = {}; allLikes = {}; allApprovals = {};
+  jobsLoaded = false; likesLoaded = false; usersLoaded = false;
+  pendingActions.clear();
+  [elements.jobsFeed, elements.myJobsList, elements.applicantsList, elements.matchesList].forEach((element) => { element.replaceChildren(); });
+  elements.statJobs.textContent = "0";
+  elements.statMatches.textContent = "0";
+  elements.profileName.textContent = "";
+  elements.profileDetails.textContent = "";
+  elements.searchJobs.value = "";
+  setBusy(elements.jobForm, false);
+  resetJobForm();
+  elements.appSection.classList.add("hidden");
+  elements.employerPanel.classList.add("hidden");
+  elements.employeePanel.classList.add("hidden");
+  elements.myJobsSection.classList.add("hidden");
+  clearMessages();
+}
+function configureProfileRecovery(recovering) {
+  $("registerEmail").readOnly = recovering;
+  const password = $("registerPassword");
+  password.disabled = recovering;
+  password.required = !recovering;
+  password.closest("label").classList.toggle("hidden", recovering);
+  elements.tabLogin.classList.toggle("hidden", recovering);
+  if (recovering) {
+    $("registerEmail").value = currentUser.email || "";
+    setAuthTab("register");
+    showMessage(elements.registerMessage, "errors.profile.missing", "error");
   }
 }
-
-window.togglePasswordVisibility = (fieldId) => {
-  const field = document.getElementById(fieldId);
-  const btn = event.target.closest(".toggle-password");
-  
-  if (field.type === "password") {
-    field.type = "text";
-    btn.classList.add("active");
-  } else {
-    field.type = "password";
-    btn.classList.remove("active");
+async function handleAuthState(user) {
+  const epoch = ++authEpoch;
+  stopSession();
+  currentUser = user;
+  elements.btnLogout.classList.toggle("hidden", !user);
+  elements.authSection.classList.toggle("hidden", Boolean(user));
+  if (!user) {
+    [elements.loginForm, elements.registerForm, elements.resetForm].forEach((form) => form.reset());
+    for (const id of ["loginPassword", "registerPassword"]) $(id).type = "password";
+    document.querySelectorAll("[data-action='toggle-password']").forEach(updatePasswordButton);
+    configureProfileRecovery(false);
+    showMessage(elements.bootMessage);
+    setAuthTab("login");
+    return;
   }
-};
-
-window.showForgotPassword = () => {
-  setAuthTab("reset");
-};
-
-window.backToLogin = () => {
-  setAuthTab("login");
-};
-
-// Validar email em tempo real
-async function validateEmailExists(email) {
+  showMessage(elements.bootMessage, "boot.loading");
   try {
-    const snapshot = await get(ref(db, "users"));
-    const users = snapshot.val() || {};
-    
-    for (const userId in users) {
-      if (users[userId].email === email) {
-        return true;
-      }
+    // createUser signs in before its promise returns. Wait for the profile write.
+    if (registrationGate) await registrationGate;
+    if (epoch !== authEpoch || auth.currentUser?.uid !== user.uid) return;
+    const snapshot = await get(ref(db, `users/${user.uid}`));
+    if (epoch !== authEpoch) return;
+    if (!snapshot.exists()) {
+      elements.authSection.classList.remove("hidden");
+      configureProfileRecovery(true);
+      return;
     }
-    return false;
+    currentProfile = snapshot.val();
+    if (!["employee", "employer"].includes(currentProfile.type)) throw new Error("Invalid profile role");
+    configureProfileRecovery(false);
+    elements.authSection.classList.add("hidden");
+    elements.appSection.classList.remove("hidden");
+    renderProfile();
+    startRealtimeListeners();
   } catch (error) {
-    console.error("Erro ao validar email:", error);
-    return false;
+    if (epoch !== authEpoch) return;
+    elements.authSection.classList.remove("hidden");
+    setAuthTab("login");
+    showMessage(elements.loginMessage, errorKey(error), "error");
+  } finally {
+    if (epoch === authEpoch) showMessage(elements.bootMessage);
+  }
+}
+function startRealtimeListeners() {
+  const uid = currentUser.uid;
+  if (currentProfile.type === "employer") {
+    subscriptions.push(watch("users", (snapshot) => { allUsers = records(snapshot.val()); usersLoaded = true; queueRender(); }));
+    subscriptions.push(watch("likes", (snapshot) => { allLikes = records(snapshot.val()); likesLoaded = true; queueRender(); }));
+  } else {
+    allUsers = { [uid]: currentProfile }; usersLoaded = true;
+    subscriptions.push(watch(`likes/${uid}`, (snapshot) => { allLikes = { [uid]: records(snapshot.val()) }; likesLoaded = true; queueRender(); }));
+  }
+  subscriptions.push(watch("jobs", (snapshot) => {
+    allJobs = Object.fromEntries(Object.entries(records(snapshot.val()))
+      .filter(([, job]) => isRecord(job) && typeof job.ownerId === "string")
+      .map(([id, job]) => [id, { ...job, id }]));
+    jobsLoaded = true;
+    syncApprovalSubscriptions();
+    queueRender();
+  }));
+}
+function syncApprovalSubscriptions() {
+  const employer = currentProfile.type === "employer";
+  const ids = new Set(Object.values(allJobs).filter((job) => employer ? job.ownerId === currentUser.uid : job.active !== false).map((job) => job.id));
+  for (const [id, unsubscribe] of approvalSubscriptions) {
+    if (!ids.has(id)) { unsubscribe(); approvalSubscriptions.delete(id); delete allApprovals[id]; }
+  }
+  for (const id of ids) {
+    if (approvalSubscriptions.has(id)) continue;
+    const path = employer ? `approvals/${id}` : `approvals/${id}/${currentUser.uid}`;
+    const unsubscribe = watch(path, (snapshot) => {
+      allApprovals[id] = employer ? records(snapshot.val()) : { [currentUser.uid]: snapshot.val() };
+      queueRender();
+    }, () => { delete allApprovals[id]; queueRender(); });
+    approvalSubscriptions.set(id, unsubscribe);
+  }
+}
+function syncContactSubscriptions(matches) {
+  if (currentProfile.type !== "employee") return;
+  const owners = new Set(matches.map((match) => match.employerId));
+  for (const [uid, unsubscribe] of contactSubscriptions) {
+    if (!owners.has(uid)) { unsubscribe(); contactSubscriptions.delete(uid); delete allUsers[uid]; }
+  }
+  for (const uid of owners) {
+    if (contactSubscriptions.has(uid)) continue;
+    const unsubscribe = watch(`users/${uid}`, (snapshot) => { allUsers[uid] = snapshot.val(); queueRender(); });
+    contactSubscriptions.set(uid, unsubscribe);
+  }
+}
+function renderProfile() {
+  if (!currentUser || !currentProfile) return;
+  const employer = currentProfile.type === "employer";
+  elements.profileTypeBadge.textContent = t(employer ? "profile.employer" : "profile.employee");
+  elements.profileName.textContent = currentProfile.name || "";
+  elements.profileDetails.textContent = [currentProfile.email, currentProfile.phone, currentProfile.area].filter(Boolean).join(" • ");
+  elements.employerPanel.classList.toggle("hidden", !employer);
+  elements.myJobsSection.classList.toggle("hidden", !employer);
+  elements.employeePanel.classList.toggle("hidden", employer);
+}
+function getMyMatches() {
+  if (!currentUser || !currentProfile) return [];
+  const matches = [];
+  for (const job of Object.values(allJobs)) {
+    if (job.active === false) continue;
+    if (currentProfile.type === "employer" && job.ownerId !== currentUser.uid) continue;
+    for (const [employeeId, approval] of Object.entries(records(allApprovals[job.id]))) {
+      if (!approval || !allLikes[employeeId]?.[job.id]) continue;
+      if (currentProfile.type === "employee" && employeeId !== currentUser.uid) continue;
+      const employee = allUsers[employeeId];
+      if (!employee || employee.type !== "employee") continue;
+      matches.push({ jobId: job.id, employeeId, employerId: job.ownerId, jobTitle: job.title,
+        company: job.company, employee, employer: allUsers[job.ownerId],
+        createdAt: Math.max(Number(approval.createdAt) || 0, Number(allLikes[employeeId][job.id]?.createdAt) || 0) });
+    }
+  }
+  return matches.sort((a, b) => b.createdAt - a.createdAt);
+}
+function empty(key) { return `<div class="empty">${escapeHTML(t(key))}</div>`; }
+function actionKey(action, jobId, employeeId = "") { return `${action}:${jobId}:${employeeId}`; }
+function actionButton(action, jobId, label, style, employeeId = "") {
+  const busy = pendingActions.has(actionKey(action, jobId, employeeId));
+  return `<button type="button" class="btn ${style}" data-action="${action}" data-job-id="${escapeHTML(jobId)}" data-employee-id="${escapeHTML(employeeId)}" ${busy ? "disabled aria-busy='true'" : ""}>${escapeHTML(t(label))}</button>`;
+}
+function jobMeta(job) {
+  return `<div class="meta">${[job.company, job.area, job.location, job.salary || t("jobs.salary.missing")].map((item) => `<span>${escapeHTML(item)}</span>`).join("")}</div>`;
+}
+function renderAll() {
+  if (!currentUser || !currentProfile) return;
+  const matches = getMyMatches();
+  syncContactSubscriptions(matches);
+  elements.statJobs.textContent = String(Object.values(allJobs).filter((job) => currentProfile.type === "employer"
+    ? job.ownerId === currentUser.uid : Boolean(allLikes[currentUser.uid]?.[job.id]) && job.active !== false).length);
+  elements.statMatches.textContent = String(matches.length);
+  renderJobsFeed(); renderMyJobs(); renderApplicants(); renderMatches(matches);
+}
+function renderJobsFeed() {
+  if (currentProfile?.type !== "employee") return;
+  const normalize = (value) => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const search = normalize(elements.searchJobs.value.trim());
+  const jobs = Object.values(allJobs).filter((job) => job.active !== false)
+    .filter((job) => normalize([job.title, job.company, job.area, job.location].join(" ")).includes(search))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  elements.jobsFeed.innerHTML = !jobsLoaded ? empty("data.loading") : !jobs.length ? empty("jobs.not.found") : jobs.map((job) => {
+    const liked = Boolean(allLikes[currentUser.uid]?.[job.id]);
+    const approved = Boolean(allApprovals[job.id]?.[currentUser.uid]);
+    return `<article class="job-card"><h3>${escapeHTML(job.title)}</h3><p class="description">${escapeHTML(job.description)}</p>${jobMeta(job)}
+      <div class="card-actions">${likesLoaded ? actionButton("interest", job.id, liked ? "jobs.remove.interested" : "jobs.interested", liked ? "btn-warning" : "btn-primary") : escapeHTML(t("data.loading"))}
+      ${liked && approved ? `<span class="badge">${escapeHTML(t("jobs.matched"))}</span>` : ""}</div></article>`;
+  }).join("");
+}
+function renderMyJobs() {
+  if (currentProfile?.type !== "employer") return;
+  const jobs = Object.values(allJobs).filter((job) => job.ownerId === currentUser.uid).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  elements.myJobsList.innerHTML = !jobsLoaded ? empty("data.loading") : !jobs.length ? empty("jobs.no.published") : jobs.map((job) => `
+    <article class="job-card"><h3>${escapeHTML(job.title)}</h3><p class="description">${escapeHTML(job.description)}</p>${jobMeta(job)}
+    <div class="card-actions">${actionButton("edit-job", job.id, "profile.edit", "btn-warning")}${actionButton("delete-job", job.id, "profile.delete", "btn-danger")}</div></article>`).join("");
+}
+function renderApplicants() {
+  if (currentProfile?.type !== "employer") return;
+  const cards = [];
+  for (const job of Object.values(allJobs).filter((item) => item.ownerId === currentUser.uid && item.active !== false)) {
+    for (const [employeeId, likedJobs] of Object.entries(allLikes)) {
+      if (!likedJobs?.[job.id]) continue;
+      const employee = allUsers[employeeId];
+      if (!employee || employee.type !== "employee") continue;
+      const approved = Boolean(allApprovals[job.id]?.[employeeId]);
+      cards.push(`<article class="applicant-card"><h3>${escapeHTML(employee.name)}</h3>
+        <p class="description">${escapeHTML(employee.bio || t("profile.bio.missing"))}</p>
+        <div class="meta">${[job.title, employee.area, employee.email, employee.phone].filter(Boolean).map((item) => `<span>${escapeHTML(item)}</span>`).join("")}</div>
+        <div class="card-actions">${actionButton("approval", job.id, approved ? "applicants.remove" : "applicants.approve", approved ? "btn-warning" : "btn-success", employeeId)}
+        ${approved ? `<span class="badge">${escapeHTML(t("jobs.matched"))}</span>` : ""}</div></article>`);
+    }
+  }
+  elements.applicantsList.innerHTML = !jobsLoaded || !likesLoaded || !usersLoaded ? empty("data.loading") : cards.join("") || empty("applicants.no");
+}
+function renderMatches(matches) {
+  elements.matchesList.innerHTML = !jobsLoaded || !likesLoaded || !usersLoaded ? empty("data.loading") : !matches.length ? empty("matches.no") : matches.map((match) => {
+    const contact = currentProfile.type === "employee" ? match.employer : match.employee;
+    const email = String(contact?.email || "");
+    const phone = String(contact?.phone || "");
+    const digits = phone.replace(/\D/g, "");
+    const brazilian = !phone.trim().startsWith("+") && (digits.length === 10 || digits.length === 11) ? `55${digits}` : digits;
+    return `<article class="match-card"><h3>🎉 ${escapeHTML(match.jobTitle)}</h3>
+      <p class="description">${escapeHTML(match.employee.name)} · ${escapeHTML(match.company)}</p>
+      <div class="meta">${[email, phone].filter(Boolean).map((value) => `<span>${escapeHTML(value)}</span>`).join("")}</div>
+      <div class="card-actions">${/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? `<a class="btn btn-outline" href="mailto:${escapeHTML(encodeURIComponent(email))}">${escapeHTML(t("auth.email"))}</a>` : ""}
+      ${/^\d{10,15}$/.test(brazilian) ? `<a class="btn btn-success" href="https://wa.me/${brazilian}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}</div></article>`;
+  }).join("");
+}
+function updateEditTitle() {
+  if (elements.jobFormTitle) elements.jobFormTitle.textContent = t($("jobId").value ? "jobs.edit" : "jobs.publish");
+  elements.cancelJobEdit?.classList.toggle("hidden", !$("jobId").value);
+}
+function resetJobForm() {
+  elements.jobForm.reset();
+  $("jobId").value = "";
+  updateEditTitle();
+}
+function editJob(jobId) {
+  const job = allJobs[jobId];
+  if (!currentUser || currentProfile?.type !== "employer" || job?.ownerId !== currentUser.uid) return;
+  for (const name of ["id", "title", "company", "area", "location", "salary", "description"]) {
+    $(`job${name[0].toUpperCase()}${name.slice(1)}`).value = job[name] || "";
+  }
+  showMessage(elements.jobMessage);
+  updateEditTitle();
+  elements.jobForm.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  $("jobTitle").focus();
+}
+async function runAction(action, jobId, employeeId) {
+  if (!currentUser || !currentProfile) return;
+  const job = allJobs[jobId];
+  if (!job) return;
+  const uid = currentUser.uid;
+  const epoch = authEpoch;
+  const key = actionKey(action, jobId, employeeId);
+  if (pendingActions.has(key)) return;
+  pendingActions.add(key);
+  renderAll();
+  try {
+    if (action === "interest" && currentProfile.type === "employee" && job.active !== false) {
+      const path = `likes/${uid}/${jobId}`;
+      if (allLikes[uid]?.[jobId]) {
+        // Remove approval too so a later application requires a fresh decision.
+        await update(ref(db), { [path]: null, [`approvals/${jobId}/${uid}`]: null, [`matches/${jobId}/${uid}`]: null });
+        if (epoch !== authEpoch) return;
+        showMessage(elements.appMessage, "jobs.interest.removed");
+      } else {
+        await set(ref(db, path), { jobId, employeeId: uid, employeeName: currentProfile.name, createdAt: serverTimestamp() });
+        if (epoch !== authEpoch) return;
+        showMessage(elements.appMessage, "jobs.interest.saved");
+      }
+    } else if (action === "approval" && currentProfile.type === "employer" && job.ownerId === uid && job.active !== false) {
+      if (!allLikes[employeeId]?.[jobId]) return;
+      const path = `approvals/${jobId}/${employeeId}`;
+      if (allApprovals[jobId]?.[employeeId]) {
+        await update(ref(db), { [path]: null, [`matches/${jobId}/${employeeId}`]: null });
+        if (epoch !== authEpoch) return;
+        showMessage(elements.appMessage, "applicants.removed");
+      } else {
+        await set(ref(db, path), { jobId, employeeId, employerId: uid, createdAt: serverTimestamp() });
+        if (epoch !== authEpoch) return;
+        showMessage(elements.appMessage, "applicants.approved");
+      }
+    } else if (action === "delete-job" && currentProfile.type === "employer" && job.ownerId === uid) {
+      if (!confirm(t("confirm.delete"))) return;
+      if (!likesLoaded) throw new Error("Applications not loaded");
+      const updates = { [`jobs/${jobId}`]: null, [`approvals/${jobId}`]: null, [`matches/${jobId}`]: null };
+      for (const [candidateId, likedJobs] of Object.entries(allLikes)) {
+        if (likedJobs?.[jobId]) updates[`likes/${candidateId}/${jobId}`] = null;
+      }
+      await update(ref(db), updates);
+      if (epoch !== authEpoch) return;
+      if ($("jobId").value === jobId) resetJobForm();
+      showMessage(elements.appMessage, "jobs.deleted");
+    }
+  } catch (error) {
+    if (epoch === authEpoch) showMessage(elements.appMessage, errorKey(error), "error");
+  } finally {
+    if (epoch === authEpoch) { pendingActions.delete(key); renderAll(); }
   }
 }
 
 elements.tabLogin.addEventListener("click", () => setAuthTab("login"));
 elements.tabRegister.addEventListener("click", () => setAuthTab("register"));
 elements.tabReset.addEventListener("click", () => setAuthTab("reset"));
+$("btnLanguage").addEventListener("click", () => setLanguage(currentLanguage === "pt" ? "en" : "pt"));
+$("btnDarkMode").addEventListener("click", () => {
+  preferences.set("profit_dark_mode", document.documentElement.classList.toggle("dark-mode"));
+  updateThemeButton();
+});
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-action]");
+  if (!button || button.disabled) return;
+  const { action, jobId, employeeId = "" } = button.dataset;
+  if (action === "toggle-password") {
+    const field = $(button.dataset.field);
+    if (!field) return;
+    field.type = field.type === "password" ? "text" : "password";
+    updatePasswordButton(button);
+  } else if (action === "forgot-password") {
+    setAuthTab("reset"); $("resetEmail").value = $("loginEmail").value.trim(); $("resetEmail").focus();
+  } else if (action === "back-login") setAuthTab("login");
+  else if (action === "cancel-edit") { resetJobForm(); showMessage(elements.jobMessage); }
+  else if (action === "edit-job") editJob(jobId);
+  else if (["interest", "approval", "delete-job"].includes(action)) void runAction(action, jobId, employeeId);
+});
+elements.searchJobs.addEventListener("input", renderJobsFeed);
 
-function updateAllText() {
-  // Tabs
-  elements.tabLogin.textContent = t("auth.enter");
-  elements.tabRegister.textContent = t("auth.register");
-  elements.tabReset.textContent = t("auth.reset");
-  
-  // Login form
-  document.querySelector("form#loginForm h2").textContent = t("auth.enter");
-  document.querySelectorAll("form#loginForm label")[0].textContent = t("auth.email");
-  document.querySelectorAll("form#loginForm label")[1].textContent = t("auth.password");
-  document.querySelector("form#loginForm button[type='submit']").textContent = t("auth.submit.login");
-  
-  // Register form
-  document.querySelector("form#registerForm h2").textContent = t("auth.register");
-  document.querySelectorAll("form#registerForm label")[0].textContent = t("auth.name");
-  document.querySelectorAll("form#registerForm label")[1].textContent = t("auth.email");
-  document.querySelectorAll("form#registerForm label")[2].textContent = t("auth.phone");
-  document.querySelectorAll("form#registerForm label")[3].textContent = t("auth.password");
-  document.querySelectorAll("form#registerForm label")[4].textContent = t("auth.type");
-  document.querySelectorAll("form#registerForm label")[5].textContent = t("auth.area");
-  document.querySelectorAll("form#registerForm label")[6].textContent = t("auth.bio");
-  document.querySelector("form#registerForm button[type='submit']").textContent = t("auth.submit.register");
-  
-  // Reset form
-  document.querySelector("form#resetForm h2").textContent = t("auth.reset");
-  document.querySelector("form#resetForm .muted").textContent = t("auth.recover.hint");
-  document.querySelectorAll("form#resetForm label")[0].textContent = t("auth.email");
-  document.querySelectorAll("form#resetForm button[type='submit']")[0].textContent = t("auth.submit.reset");
-  
-  // Logout button
-  elements.btnLogout.textContent = t("logout");
-  
-  // Render all UI if logged in
-  if (currentUser && currentProfile) {
-    renderProfile();
-    renderAll();
-  }
-}
-
-// Carregar preferências ao iniciar
-loadPreferences();
-
-$("btnDarkMode").addEventListener("click", window.toggleDarkMode);
-$("btnLanguage").addEventListener("click", () => {
-  const newLang = currentLanguage === "pt" ? "en" : "pt";
-  setLanguage(newLang);
-});elements.registerForm.addEventListener("submit", async (event) => {
+elements.registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (elements.registerForm.getAttribute("aria-busy") === "true") return;
   clearMessages();
-
   const name = $("registerName").value.trim();
   const email = $("registerEmail").value.trim();
   const phone = $("registerPhone").value.trim();
-  const password = $("registerPassword").value.trim();
+  const password = $("registerPassword").value; // Password whitespace is meaningful.
   const type = $("registerType").value;
   const area = $("registerArea").value.trim();
   const bio = $("registerBio").value.trim();
-
-  if (!name || !email || !phone || !password || !type || !area) {
-    showMessage(elements.registerMessage, "errors.filled", "error");
-    return;
+  const recovering = Boolean(currentUser && !currentProfile);
+  if (!name || !email || !phone || !area || !["employee", "employer"].includes(type)) {
+    showMessage(elements.registerMessage, "errors.filled", "error"); return;
   }
-
-  // Validar formato do telefone
-  const phoneRegex = /^[\d\s\-\(\)]{10,}$/;
-  if (!phoneRegex.test(phone)) {
-    showMessage(elements.registerMessage, "errors.invalid.phone", "error");
-    return;
+  const digits = phone.replace(/\D/g, "");
+  if (!/^\+?[\d\s().-]+$/.test(phone) || !/^\d{10,15}$/.test(digits)) {
+    showMessage(elements.registerMessage, "errors.invalid.phone", "error"); return;
   }
-
-  // Validar se email já existe
-  const emailExists = await validateEmailExists(email);
-  if (emailExists) {
-    showMessage(elements.registerMessage, "errors.email.exists", "error");
-    return;
-  }
-
+  if (!recovering && password.length < 6) { showMessage(elements.registerMessage, "errors.password.weak", "error"); return; }
+  let release;
+  registrationGate = new Promise((resolve) => { release = resolve; });
+  setBusy(elements.registerForm, true);
+  let success = false;
   try {
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-
-    await set(ref(db, `users/${credential.user.uid}`), {
-      uid: credential.user.uid,
-      name,
-      email,
-      phone,
-      type,
-      area,
-      bio,
-      createdAt: Date.now()
-    });
-
-    showMessage(elements.registerMessage, "success.account.created");
+    const user = recovering ? currentUser : (await createUserWithEmailAndPassword(auth, email, password)).user;
+    await set(ref(db, `users/${user.uid}`), { uid: user.uid, name, email: user.email || email, phone, type, area, bio, createdAt: serverTimestamp() });
+    success = true;
     elements.registerForm.reset();
-    
-    // Limpar os campos de entrada
-    setTimeout(() => setAuthTab("login"), 1500);
+    $("registerPassword").type = "password";
   } catch (error) {
-    const errorKey = getErrorMessageKey(error.code);
-    showMessage(elements.registerMessage, errorKey, "error");
+    showMessage(elements.registerMessage, errorKey(error), "error");
+  } finally {
+    registrationGate = null; release();
+    setBusy(elements.registerForm, false);
   }
+  if (recovering && success) await handleAuthState(auth.currentUser);
 });
-
 elements.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  clearMessages();
-
-  const email = $("loginEmail").value.trim();
-  const password = $("loginPassword").value.trim();
-
+  if (elements.loginForm.getAttribute("aria-busy") === "true") return;
+  clearMessages(); setBusy(elements.loginForm, true);
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    elements.loginForm.reset();
-  } catch (error) {
-    showMessage(elements.loginMessage, translateFirebaseError(error.code), "error");
-  }
+    await signInWithEmailAndPassword(auth, $("loginEmail").value.trim(), $("loginPassword").value);
+    elements.loginForm.reset(); $("loginPassword").type = "password";
+    // Also retries a profile load after a transient database read failure.
+    if (currentUser && !currentProfile) await handleAuthState(auth.currentUser);
+  } catch (error) { showMessage(elements.loginMessage, errorKey(error), "error"); }
+  finally { setBusy(elements.loginForm, false); }
 });
-
 elements.resetForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  clearMessages();
-
-  const email = $("resetEmail").value.trim();
-
-  if (!email) {
-    showMessage(elements.resetMessage, "Insira seu e-mail.", "error");
-    return;
-  }
-
+  if (elements.resetForm.getAttribute("aria-busy") === "true") return;
+  clearMessages(); setBusy(elements.resetForm, true);
   try {
-    await sendPasswordResetEmail(auth, email);
-    showMessage(elements.resetMessage, "E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.");
-    elements.resetForm.reset();
-    
-    setTimeout(() => setAuthTab("login"), 3000);
-  } catch (error) {
-    showMessage(elements.resetMessage, translateFirebaseError(error.code), "error");
-  }
+    await sendPasswordResetEmail(auth, $("resetEmail").value.trim());
+    showMessage(elements.resetMessage, "success.password.reset");
+  } catch (error) { showMessage(elements.resetMessage, errorKey(error), "error"); }
+  finally { setBusy(elements.resetForm, false); }
 });
-
 elements.btnLogout.addEventListener("click", async () => {
-  await signOut(auth);
+  elements.btnLogout.disabled = true;
+  try { await signOut(auth); }
+  catch (error) { showMessage(elements.appMessage, errorKey(error), "error"); showMessage(elements.loginMessage, errorKey(error), "error"); }
+  finally { elements.btnLogout.disabled = false; }
 });
-
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-
-  if (!user) {
-    currentProfile = null;
-    elements.authSection.classList.remove("hidden");
-    elements.appSection.classList.add("hidden");
-    elements.btnLogout.classList.add("hidden");
-    return;
-  }
-
-  const profileSnapshot = await get(ref(db, `users/${user.uid}`));
-
-  if (!profileSnapshot.exists()) {
-    alert("Perfil não encontrado. Faça cadastro novamente.");
-    await signOut(auth);
-    return;
-  }
-
-  currentProfile = profileSnapshot.val();
-
-  elements.authSection.classList.add("hidden");
-  elements.appSection.classList.remove("hidden");
-  elements.btnLogout.classList.remove("hidden");
-
-  renderProfile();
-  startRealtimeListeners();
-});
-
-function renderProfile() {
-  const typeText = currentProfile.type === "employer" ? "Empregador" : "Empregado";
-
-  elements.profileTypeBadge.textContent = typeText;
-  elements.profileName.textContent = currentProfile.name;
-  elements.profileDetails.textContent = `${currentProfile.email} • ${currentProfile.phone} • ${currentProfile.area}`;
-
-  if (currentProfile.type === "employer") {
-    elements.employerPanel.classList.remove("hidden");
-    elements.myJobsSection.classList.remove("hidden");
-    elements.employeePanel.classList.add("hidden");
-  } else {
-    elements.employeePanel.classList.remove("hidden");
-    elements.employerPanel.classList.add("hidden");
-    elements.myJobsSection.classList.add("hidden");
-  }
-}
-
-function startRealtimeListeners() {
-  onValue(ref(db, "users"), (snapshot) => {
-    allUsers = snapshot.val() || {};
-    renderAll();
-  });
-
-  onValue(ref(db, "jobs"), (snapshot) => {
-    allJobs = snapshot.val() || {};
-    renderAll();
-  });
-
-  onValue(ref(db, "likes"), (snapshot) => {
-    allLikes = snapshot.val() || {};
-    renderAll();
-  });
-
-  onValue(ref(db, "approvals"), (snapshot) => {
-    allApprovals = snapshot.val() || {};
-    renderAll();
-  });
-
-  onValue(ref(db, "matches"), (snapshot) => {
-    allMatches = snapshot.val() || {};
-    renderAll();
-  });
-}
-
-function renderAll() {
-  if (!currentUser || !currentProfile) return;
-
-  renderStats();
-  renderJobsFeed();
-  renderMyJobs();
-  renderApplicants();
-  renderMatches();
-}
-
-function renderStats() {
-  const myJobs = Object.values(allJobs).filter(job => job.ownerId === currentUser.uid);
-  const myMatches = getMyMatches();
-
-  elements.statJobs.textContent = currentProfile.type === "employer" ? myJobs.length : Object.keys(allLikes[currentUser.uid] || {}).length;
-  elements.statMatches.textContent = myMatches.length;
-}
-
 elements.jobForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
-  if (!currentUser || currentProfile.type !== "employer") {
-    showMessage(elements.jobMessage, "Apenas empregadores podem publicar vagas.", "error");
-    return;
+  if (elements.jobForm.getAttribute("aria-busy") === "true") return;
+  if (!currentUser || currentProfile?.type !== "employer") {
+    showMessage(elements.jobMessage, "errors.only.employer", "error"); return;
   }
-
-  const title = $("jobTitle").value.trim();
-  const company = $("jobCompany").value.trim();
-  const area = $("jobArea").value.trim();
-  const location = $("jobLocation").value.trim();
-  const salary = $("jobSalary").value.trim();
-  const description = $("jobDescription").value.trim();
-  const jobId = $("jobId").value;
-
-  if (!title || !company || !area || !location || !description) {
-    showMessage(elements.jobMessage, "Preencha os campos obrigatórios da vaga.", "error");
-    return;
+  const payload = Object.fromEntries(["title", "company", "area", "location", "salary", "description"].map((name) => [name, $(`job${name[0].toUpperCase()}${name.slice(1)}`).value.trim()]));
+  if (["title", "company", "area", "location", "description"].some((name) => !payload[name])) {
+    showMessage(elements.jobMessage, "jobs.required", "error"); return;
   }
-
+  const id = $("jobId").value;
+  const epoch = authEpoch;
+  if (id && allJobs[id]?.ownerId !== currentUser.uid) { showMessage(elements.jobMessage, "errors.only.yours", "error"); return; }
+  setBusy(elements.jobForm, true);
   try {
-    if (jobId) {
-      await update(ref(db, `jobs/${jobId}`), {
-        title,
-        company,
-        area,
-        location,
-        salary,
-        description,
-        updatedAt: Date.now()
-      });
-      showMessage(elements.jobMessage, "Vaga atualizada com sucesso!");
-    } else {
-      const newJobRef = push(ref(db, "jobs"));
-
-      await set(newJobRef, {
-        id: newJobRef.key,
-        ownerId: currentUser.uid,
-        ownerName: currentProfile.name,
-        title,
-        company,
-        area,
-        location,
-        salary,
-        description,
-        active: true,
-        createdAt: Date.now()
-      });
-
-      showMessage(elements.jobMessage, "Vaga publicada com sucesso!");
+    if (id) await update(ref(db, `jobs/${id}`), { ...payload, updatedAt: serverTimestamp() });
+    else {
+      const jobRef = push(ref(db, "jobs"));
+      await set(jobRef, { ...payload, id: jobRef.key, ownerId: currentUser.uid, ownerName: currentProfile.name, active: true, createdAt: serverTimestamp() });
     }
-
-    elements.jobForm.reset();
-    $("jobId").value = "";
-  } catch (error) {
-    showMessage(elements.jobMessage, "Erro ao salvar vaga.", "error");
-  }
+    if (epoch !== authEpoch) return;
+    resetJobForm(); showMessage(elements.jobMessage, id ? "jobs.saved" : "jobs.published");
+  } catch (error) { if (epoch === authEpoch) showMessage(elements.jobMessage, errorKey(error), "error"); }
+  finally { if (epoch === authEpoch) setBusy(elements.jobForm, false); }
 });
 
-elements.searchJobs.addEventListener("input", renderJobsFeed);
-
-function renderJobsFeed() {
-  if (!currentProfile || currentProfile.type !== "employee") return;
-
-  const search = elements.searchJobs.value.toLowerCase().trim();
-
-  const jobs = Object.values(allJobs)
-    .filter(job => job.active !== false)
-    .filter(job => {
-      const text = `${job.title} ${job.company} ${job.area} ${job.location}`.toLowerCase();
-      return text.includes(search);
-    })
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  if (jobs.length === 0) {
-    elements.jobsFeed.innerHTML = `<div class="empty">Nenhuma vaga encontrada.</div>`;
-    return;
-  }
-
-  elements.jobsFeed.innerHTML = jobs.map(job => {
-    const liked = Boolean(allLikes[currentUser.uid]?.[job.id]);
-    const approved = Boolean(allApprovals[job.id]?.[currentUser.uid]);
-    const matched = Boolean(allMatches[job.id]?.[currentUser.uid]);
-
-    return `
-      <article class="job-card">
-        <div>
-          <h3>${escapeHTML(job.title)}</h3>
-          <p class="description">${escapeHTML(job.description)}</p>
-        </div>
-
-        <div class="meta">
-          <span>${escapeHTML(job.company)}</span>
-          <span>${escapeHTML(job.area)}</span>
-          <span>${escapeHTML(job.location)}</span>
-          <span>${escapeHTML(job.salary || "Salário não informado")}</span>
-        </div>
-
-        <div class="card-actions">
-          <button class="btn ${liked ? "btn-warning" : "btn-primary"}" onclick="window.toggleInterest('${job.id}')">
-            ${liked ? "Remover interesse" : "Tenho interesse"}
-          </button>
-
-          ${approved ? `<span class="badge">Empresa aprovou você</span>` : ""}
-          ${matched ? `<span class="badge">🎉 Match confirmado</span>` : ""}
-        </div>
-      </article>
-    `;
-  }).join("");
-}
-
-window.toggleInterest = async (jobId) => {
-  if (!currentUser || currentProfile.type !== "employee") return;
-
-  const likeRef = ref(db, `likes/${currentUser.uid}/${jobId}`);
-  const alreadyLiked = Boolean(allLikes[currentUser.uid]?.[jobId]);
-
-  if (alreadyLiked) {
-    await remove(likeRef);
-    return;
-  }
-
-  await set(likeRef, {
-    jobId,
-    employeeId: currentUser.uid,
-    employeeName: currentProfile.name,
-    createdAt: Date.now()
-  });
-
-  await verifyMatch(jobId, currentUser.uid);
-};
-
-function renderApplicants() {
-  if (!currentProfile || currentProfile.type !== "employer") return;
-
-  const myJobs = Object.values(allJobs).filter(job => job.ownerId === currentUser.uid);
-  const cards = [];
-
-  myJobs.forEach(job => {
-    Object.entries(allLikes).forEach(([employeeId, likedJobs]) => {
-      if (likedJobs && likedJobs[job.id]) {
-        const employee = allUsers[employeeId];
-        const approved = Boolean(allApprovals[job.id]?.[employeeId]);
-        const matched = Boolean(allMatches[job.id]?.[employeeId]);
-
-        if (!employee) return;
-
-        cards.push(`
-          <article class="applicant-card">
-            <div>
-              <h3>${escapeHTML(employee.name)}</h3>
-              <p class="description">${escapeHTML(employee.bio || "Sem bio cadastrada")}</p>
-            </div>
-
-            <div class="meta">
-              <span>Vaga: ${escapeHTML(job.title)}</span>
-              <span>Área: ${escapeHTML(employee.area || "Não informada")}</span>
-              <span>${escapeHTML(employee.email)}</span>
-              <span>📱 ${escapeHTML(employee.phone || "Sem telefone")}</span>
-            </div>
-
-            <div class="card-actions">
-              <button class="btn ${approved ? "btn-warning" : "btn-success"}" onclick="window.toggleApproval('${job.id}', '${employeeId}')">
-                ${approved ? "Remover aprovação" : "Aprovar candidato"}
-              </button>
-
-              ${matched ? `<span class="badge">🎉 Match confirmado</span>` : ""}
-            </div>
-          </article>
-        `);
-      }
-    });
-  });
-
-  elements.applicantsList.innerHTML = cards.length ? cards.join("") : `<div class="empty">Ainda não há interessados nas suas vagas.</div>`;
-}
-
-window.toggleApproval = async (jobId, employeeId) => {
-  if (!currentUser || currentProfile.type !== "employer") return;
-
-  const job = allJobs[jobId];
-
-  if (!job || job.ownerId !== currentUser.uid) {
-    alert("Você só pode aprovar candidatos das suas próprias vagas.");
-    return;
-  }
-
-  const approvalRef = ref(db, `approvals/${jobId}/${employeeId}`);
-  const alreadyApproved = Boolean(allApprovals[jobId]?.[employeeId]);
-
-  if (alreadyApproved) {
-    await remove(approvalRef);
-    await remove(ref(db, `matches/${jobId}/${employeeId}`));
-    return;
-  }
-
-  await set(approvalRef, {
-    jobId,
-    employeeId,
-    employerId: currentUser.uid,
-    createdAt: Date.now()
-  });
-
-  await verifyMatch(jobId, employeeId);
-};
-
-async function verifyMatch(jobId, employeeId) {
-  const likeSnapshot = await get(ref(db, `likes/${employeeId}/${jobId}`));
-  const approvalSnapshot = await get(ref(db, `approvals/${jobId}/${employeeId}`));
-
-  if (likeSnapshot.exists() && approvalSnapshot.exists()) {
-    const job = allJobs[jobId] || (await get(ref(db, `jobs/${jobId}`))).val();
-    const employee = allUsers[employeeId] || (await get(ref(db, `users/${employeeId}`))).val();
-    const employer = allUsers[job.ownerId] || (await get(ref(db, `users/${job.ownerId}`))).val();
-
-    await set(ref(db, `matches/${jobId}/${employeeId}`), {
-      jobId,
-      employeeId,
-      employerId: job.ownerId,
-      jobTitle: job.title,
-      company: job.company,
-      employeeName: employee.name,
-      employeeEmail: employee.email,
-      employeePhone: employee.phone,
-      createdAt: Date.now()
-    });
-
-    // Enviar notificação por email
-    await sendMatchNotificationEmail(employer, employee, job);
-  }
-}
-
-async function sendMatchNotificationEmail(employer, employee, job) {
-  try {
-    // Verificar se EmailJS está inicializado
-    if (typeof emailjs === "undefined" || !EMAILJS_PUBLIC_KEY || EMAILJS_PUBLIC_KEY.includes("YOUR_")) {
-      console.log("EmailJS não configurado. Pule este passo ou configure em emailjs.com");
-      return;
-    }
-
-    const templateParams = {
-      employer_name: employer.name,
-      employer_email: employer.email,
-      employee_name: employee.name,
-      employee_email: employee.email,
-      employee_phone: employee.phone,
-      job_title: job.title,
-      company_name: job.company,
-      job_area: job.area,
-      employee_bio: employee.bio || "Sem bio cadastrada"
-    };
-
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY);
-    console.log("Email de match enviado com sucesso!");
-  } catch (error) {
-    console.log("Erro ao enviar email (funcionalidade opcional):", error);
-  }
-}
-
-function renderMatches() {
-  const matches = getMyMatches();
-
-  if (matches.length === 0) {
-    elements.matchesList.innerHTML = `<div class="empty">Nenhum match confirmado ainda.</div>`;
-    return;
-  }
-
-  elements.matchesList.innerHTML = matches.map(match => `
-    <article class="match-card">
-      <h3>🎉 ${escapeHTML(match.jobTitle)}</h3>
-      <p class="description">
-        Match entre <strong>${escapeHTML(match.employeeName)}</strong> e
-        <strong>${escapeHTML(match.company)}</strong>.
-      </p>
-      <div class="meta">
-        <span>Candidato: ${escapeHTML(match.employeeEmail)}</span>
-        <span>Telefone: ${escapeHTML(match.employeePhone || "Não informado")}</span>
-        <span>Empresa: ${escapeHTML(match.company)}</span>
-      </div>
-    </article>
-  `).join("");
-}
-
-function getMyMatches() {
-  const result = [];
-
-  Object.values(allMatches).forEach(jobMatches => {
-    if (!jobMatches) return;
-
-    Object.values(jobMatches).forEach(match => {
-      if (currentProfile.type === "employee" && match.employeeId === currentUser.uid) {
-        result.push(match);
-      }
-
-      if (currentProfile.type === "employer" && match.employerId === currentUser.uid) {
-        result.push(match);
-      }
-    });
-  });
-
-  return result.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-}
-
-function renderMyJobs() {
-  if (!currentProfile || currentProfile.type !== "employer") return;
-
-  const myJobs = Object.values(allJobs)
-    .filter(job => job.ownerId === currentUser.uid)
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  if (myJobs.length === 0) {
-    elements.myJobsList.innerHTML = `<div class="empty">Você ainda não publicou vagas.</div>`;
-    return;
-  }
-
-  elements.myJobsList.innerHTML = myJobs.map(job => `
-    <article class="job-card">
-      <h3>${escapeHTML(job.title)}</h3>
-      <p class="description">${escapeHTML(job.description)}</p>
-
-      <div class="meta">
-        <span>${escapeHTML(job.company)}</span>
-        <span>${escapeHTML(job.area)}</span>
-        <span>${escapeHTML(job.location)}</span>
-        <span>${escapeHTML(job.salary || "Salário não informado")}</span>
-      </div>
-
-      <div class="card-actions">
-        <button class="btn btn-warning" onclick="window.editJob('${job.id}')">Editar</button>
-        <button class="btn btn-danger" onclick="window.deleteJob('${job.id}')">Excluir</button>
-      </div>
-    </article>
-  `).join("");
-}
-
-window.editJob = (jobId) => {
-  const job = allJobs[jobId];
-  if (!job) return;
-
-  $("jobId").value = job.id;
-  $("jobTitle").value = job.title;
-  $("jobCompany").value = job.company;
-  $("jobArea").value = job.area;
-  $("jobLocation").value = job.location;
-  $("jobSalary").value = job.salary || "";
-  $("jobDescription").value = job.description;
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
-window.deleteJob = async (jobId) => {
-  const confirmDelete = confirm("Tem certeza que deseja excluir esta vaga?");
-  if (!confirmDelete) return;
-
-  await remove(ref(db, `jobs/${jobId}`));
-  await remove(ref(db, `approvals/${jobId}`));
-  await remove(ref(db, `matches/${jobId}`));
-};
-
-function translateFirebaseError(code) {
-  const errors = {
-    "auth/email-already-in-use": "Este e-mail já está cadastrado.",
-    "auth/invalid-email": "E-mail inválido.",
-    "auth/weak-password": "A senha deve ter pelo menos 6 caracteres.",
-    "auth/user-not-found": "Usuário não encontrado.",
-    "auth/wrong-password": "Senha incorreta.",
-    "auth/invalid-credential": "E-mail ou senha incorretos.",
-    "auth/network-request-failed": "Falha de conexão. Verifique sua internet.",
-    "auth/too-many-requests": "Muitas tentativas. Tente novamente mais tarde.",
-    "auth/operation-not-allowed": "Operação não permitida.",
-    "auth/account-exists-with-different-credential": "Esta conta já existe com outro método de autenticação."
-  };
-
-  return errors[code] || `Erro: ${code}`;
-}
-
-function escapeHTML(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+document.documentElement.classList.toggle("dark-mode", preferences.get("profit_dark_mode") === "true");
+updateThemeButton();
+updateAllText();
+onAuthStateChanged(auth, (user) => { void handleAuthState(user); }, (error) => {
+  showMessage(elements.bootMessage, errorKey(error), "error");
+});

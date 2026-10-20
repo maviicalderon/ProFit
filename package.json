@@ -1,0 +1,15 @@
+{
+  "name": "profit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Rede de vagas ProFit — frontend estático com Firebase",
+  "scripts": {
+    "test": "node --experimental-vm-modules --test tests/app.test.mjs",
+    "test:rules": "npm --prefix tests/rules test",
+    "check": "node --check app.js && node --check i18n.js && node --check bootstrap.js && node --check firebase-config.js"
+  },
+  "devDependencies": {
+    "linkedom": "0.18.12"
+  }
+}

@@ -1,258 +1,76 @@
-# Profit - Rede Social de Vagas com Firebase
+# ProFit
 
-Projeto Profit feito com:
+Rede social de vagas para conectar candidatos e empresas. O site utiliza HTML, CSS e JavaScript com Firebase Authentication e Realtime Database; pode ser hospedado no GitHub Pages sem servidor de aplicação próprio.
 
-- HTML
-- CSS
-- JavaScript
-- Firebase Authentication
-- Firebase Realtime Database
-- Bootstrap Icons
-- EmailJS (para notificações de match)
+## O que funciona
 
-## Ideia do projeto
+- Cadastro e login com e-mail e senha, recuperação de senha e exibição opcional da senha.
+- Perfis de candidato e empregador, com telefone, área de atuação e bio.
+- Publicação, edição, cancelamento de edição e exclusão das próprias vagas.
+- Busca de vagas, manifestação de interesse e aprovação de candidatos.
+- Matches em tempo real e contatos das duas partes.
+- Idiomas português/inglês, temas claro/escuro e layout adaptado ao celular.
 
-O sistema funciona como uma rede social de empregos.
+O match é calculado a partir de uma candidatura em `likes` e uma aprovação em `approvals` para a mesma vaga e candidato. Remover qualquer um desses vínculos desfaz o match. Registros antigos em `matches` não são usados como fonte de verdade; o aplicativo não grava novos matches nesse caminho.
 
-Existem dois tipos de usuários:
+## Correções incluídas
 
-1. Empregado / candidato
-2. Empregador / empresa
+Foram corrigidos o erro de JavaScript que impedia a inicialização, a tradução que apagava campos do formulário, a disputa entre o cadastro e o carregamento do perfil, os listeners que permaneciam após a saída e os matches que continuavam aparecendo sem interesse ou aprovação. As ações exibem erros de conexão/permissão e evitam envios duplicados. Também foram corrigidos contraste do tema escuro, acessibilidade dos controles e conteúdo longo em telas pequenas.
 
-O empregador publica vagas.  
-O empregado visualiza as vagas e clica em "Tenho interesse".  
-O empregador visualiza os interessados e clica em "Aprovar candidato".  
-Quando os dois lados demonstram interesse, o sistema cria um match.
+As regras do banco validam os dados e restringem alterações ao dono do perfil, ao candidato e ao empregador responsável pela vaga. O arquivo `database.rules.json` é a fonte das regras; publique-o no Firebase para que as permissões passem a valer no banco hospedado.
 
-## Novos Recursos
+## Executar localmente
 
-- ✅ Campo de telefone/WhatsApp obrigatório no cadastro
-- ✅ Toggle para mostrar/esconder senha com animação Bootstrap Icons
-- ✅ Recuperação de senha (Esqueci minha senha)
-- ✅ Validação de email em tempo real (verifica se já existe)
-- ✅ Mensagens de erro com design melhorado e animações
-- ✅ Telefone exibido no perfil e informações de match
-- ✅ Notificações de email quando match é confirmado (opcional via EmailJS)
+Na raiz do projeto:
 
-## Estrutura do banco
-
-```txt
-users/
-  uid/
-    name
-    email
-    phone
-    type
-    area
-    bio
-    createdAt
-
-jobs/
-  jobId/
-    id
-    ownerId
-    ownerName
-    title
-    company
-    area
-    location
-    salary
-    description
-    active
-    createdAt
-    updatedAt
-
-likes/
-  employeeUid/
-    jobId/
-      jobId
-      employeeId
-      employeeName
-      createdAt
-
-approvals/
-  jobId/
-    employeeUid/
-      jobId
-      employeeId
-      employerId
-      createdAt
-
-matches/
-  jobId/
-    employeeUid/
-      jobId
-      employeeId
-      employerId
-      jobTitle
-      company
-      employeeName
-      employeeEmail
-      employeePhone
-      createdAt
+```bash
+python3 -m http.server 8080
 ```
 
-## Configuração Inicial
+Abra <http://localhost:8080>. Utilize HTTP/HTTPS; abrir `index.html` diretamente como arquivo não é um modo suportado para os módulos JavaScript.
 
-### 1. Firebase Setup
+A aplicação local utiliza o Firebase definido em `firebase-config.js`. Confira a configuração do projeto antes de testar manualmente com contas e dados reais.
 
-- Crie um projeto em [Firebase Console](https://console.firebase.google.com)
-- Copie suas credenciais e substitua em `app.js`
-- Ative Authentication (Email/Password)
-- Configure o Realtime Database com regras apropriadas
+## Verificações automatizadas
 
-### 2. EmailJS (Opcional - para notificações de match)
+Com Node.js e npm instalados:
 
-Se deseja receber emails quando um match for confirmado:
-
-1. Crie uma conta em [EmailJS](https://www.emailjs.com)
-2. Crie um serviço de email (Gmail, etc)
-3. Crie um template de email com essas variáveis:
-   - `employer_name` - Nome do empregador
-   - `employer_email` - Email do empregador
-   - `employee_name` - Nome do candidato
-   - `employee_email` - Email do candidato
-   - `employee_phone` - Telefone do candidato
-   - `job_title` - Título da vaga
-   - `company_name` - Nome da empresa
-   - `job_area` - Área de atuação
-   - `employee_bio` - Bio do candidato
-
-4. No `app.js`, substitua:
-   ```javascript
-   const EMAILJS_SERVICE_ID = "seu_service_id";
-   const EMAILJS_TEMPLATE_ID = "seu_template_id";
-   const EMAILJS_PUBLIC_KEY = "sua_public_key";
-   ```
-
-5. Descomente a linha de inicialização do EmailJS:
-   ```javascript
-   emailjs.init("YOUR_PUBLIC_KEY");
-   ```
-
-### 3. Segurança
-
-#### Sobre Hash de Senhas
-
-O Firebase Authentication **já realiza hash automático** de todas as senhas usando bcrypt. Você **não precisa** fazer hash no frontend. O Firebase armazena as senhas de forma segura nos seus servidores.
-
-#### Boas Práticas
-
-- Use HTTPS em produção
-- Configure regras de segurança do Firebaseconf Database
-- Valide dados no backend quando possível
-- Implementar rate limiting para tentativas de login
-- Usar variáveis de ambiente para credenciais sensíveis
-
-## Regras de Segurança Recomendadas para Firebaseconf
-
-```json
-{
-  "rules": {
-    "users": {
-      "$uid": {
-        ".read": "$uid === auth.uid || root.child('users').child(auth.uid).child('type').val() === 'employer'",
-        ".write": "$uid === auth.uid"
-      }
-    },
-    "jobs": {
-      ".read": true,
-      "$jobId": {
-        ".write": "root.child('jobs').child($jobId).child('ownerId').val() === auth.uid"
-      }
-    },
-    "likes": {
-      "$employeeId": {
-        ".read": true,
-        ".write": "$employeeId === auth.uid"
-      }
-    },
-    "approvals": {
-      ".read": true,
-      "$jobId": {
-        ".write": "root.child('jobs').child($jobId).child('ownerId').val() === auth.uid"
-      }
-    },
-    "matches": {
-      ".read": true
-    }
-  }
-}
+```bash
+npm ci
+npm test
+npm run check
 ```
 
-## Como Usar
+A suíte de aplicação usa DOM e Firebase simulados, sem criar contas nem alterar dados de produção. O comando `check` verifica a sintaxe dos módulos.
 
-1. Clone o repositório
-2. Abra `index.html` no navegador
-3. Crie uma conta como Empregado ou Empregador
-4. Insira seu telefone no formato: (11) 99999-9999
-5. Crie/candidata-se a vagas
-6. Quando houver match, você verá nos "Matches confirmados"
+Para verificar as regras, instale também Java compatível com o emulador do Firebase e execute:
 
-## Funcionalidades Detalhadas
-
-### Recuperação de Senha
-
-- Clique em "Esqueci minha senha" na tela de login
-- Insira seu e-mail cadastrado
-- Receberá um link de recuperação pelo Firebase
-- O link te redirecionará para redefinir a senha
-
-### Toggle de Senha
-
-- Ao cadastrar ou fazer login, você pode clicar no ícone 👁️ para visualizar a senha
-- A animação é smooth e intuitiva
-
-### Validação de Email
-
-- O sistema verifica se o email já existe antes de criar conta
-- Se for duplicado, você receberá uma mensagem de erro clara
-
-### Notificações
-
-Quando um match é confirmado:
-- Ambas as partes veem "🎉 Match confirmado"
-- Se EmailJS estiver configurado, o empregador recebe email com dados do candidato
-- Dados como telefone e bio aparecem no match
-      employeeName
-
-approvals/
-  jobId/
-    employeeUid/
-      employerId
-      employeeId
-
-matches/
-  jobId/
-    employeeUid/
-      jobId
-      employeeId
-      employerId
-      jobTitle
-      company
-      employeeName
-      employeeEmail
+```bash
+npm --prefix tests/rules ci
+npm run test:rules
 ```
 
-## Como rodar
+Esses testes usam o emulador local com o projeto isolado `demo-profit`; não publicam regras nem escrevem no Firebase de produção.
 
-1. Abra a pasta no VS Code.
-2. Instale a extensão **Live Server**.
-3. Clique com o botão direito no `index.html`.
-4. Selecione **Open with Live Server**.
+## Publicação e configuração
 
-## Configuração no Firebase
+Consulte [QUICK_START.md](QUICK_START.md) para ativar Authentication, publicar as regras e configurar o GitHub Pages. A inclusão das regras no repositório, por si só, não altera o banco hospedado.
 
-No Firebase Console:
+Depois de ativado o Pages deste repositório, a URL esperada é <https://maviicalderon.github.io/ProFit/>. A disponibilidade dessa publicação precisa ser confirmada na página de implantação do GitHub.
 
-1. Vá em **Authentication**.
-2. Clique em **Sign-in method**.
-3. Ative **Email/Password**.
-4. Vá em **Realtime Database**.
-5. Crie o banco.
-6. Em **Rules**, cole o conteúdo do arquivo `database.rules.json`.
+## Arquivos principais
 
-## Observação importante
+| Arquivo | Função |
+| --- | --- |
+| `index.html`, `style.css` | Interface, responsividade e temas |
+| `bootstrap.js` | Inicialização e mensagem de falha no carregamento |
+| `app.js` | Autenticação, perfis, vagas, interesse, aprovação e matches |
+| `i18n.js` | Textos em português e inglês |
+| `firebase-config.js` | Configuração pública do projeto Firebase |
+| `database.rules.json` | Permissões e validações do Realtime Database |
+| `firebase.json`, `.firebaserc` | Configuração do Firebase e emuladores |
+| `tests/` | Testes isolados de aplicação e regras |
 
-As regras incluídas são didáticas e simples para projeto acadêmico.  
-Para produção real, o ideal é endurecer as permissões, validando melhor se apenas o dono da vaga pode aprovar candidatos e editar/excluir suas vagas.
+## E-mail e limites
+
+A recuperação de senha usa o serviço de e-mail do Firebase Authentication. Matches são exibidos no site; não há envio automático de e-mail de match implementado. Os antigos exemplos com credenciais fictícias do EmailJS foram removidos. Veja [EMAIL_SETUP.md](EMAIL_SETUP.md) e [SECURITY.md](SECURITY.md) para o comportamento e os limites atuais.

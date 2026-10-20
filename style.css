@@ -5,7 +5,12 @@
 }
 
 :root {
+  color-scheme: light;
   --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-soft: #f8fbff;
+  --surface-tint: #eef4ff;
+  --accent-text: #1e40af;
   --card: rgba(255, 255, 255, 0.92);
   --text: #172033;
   --muted: #697386;
@@ -21,6 +26,11 @@
 }
 
 html.dark-mode {
+  color-scheme: dark;
+  --surface: #172338;
+  --surface-soft: #1b2a40;
+  --surface-tint: #20365a;
+  --accent-text: #b2ceff;
   --bg: #0f172a;
   --card: rgba(30, 41, 59, 0.92);
   --text: #f1f5f9;
@@ -89,7 +99,7 @@ html.dark-mode .background-glow {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 8px 12px;
@@ -137,7 +147,7 @@ html.dark-mode .btn-icon:hover {
 
 .card,
 .hero-card {
-  border: 1px solid rgba(219, 227, 239, 0.82);
+  border: 1px solid var(--border);
   background: var(--card);
   backdrop-filter: blur(14px);
   border-radius: var(--radius);
@@ -207,7 +217,7 @@ html.dark-mode .btn-icon:hover {
   border-radius: 999px;
   padding: 8px 13px;
   background: rgba(37, 99, 235, 0.10);
-  color: #1e40af;
+  color: var(--accent-text);
   font-weight: 800;
   font-size: 0.88rem;
 }
@@ -219,15 +229,17 @@ html.dark-mode .btn-icon:hover {
 }
 
 .tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  background: #eef4ff;
+  display: flex;
+  gap: 4px;
+  background: var(--surface-tint);
   border-radius: 16px;
   padding: 5px;
   margin-bottom: 18px;
 }
 
 .tab {
+  flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
   border-radius: 13px;
@@ -238,7 +250,7 @@ html.dark-mode .btn-icon:hover {
 }
 
 .tab.active {
-  background: white;
+  background: var(--surface);
   color: var(--primary);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
 }
@@ -251,7 +263,7 @@ html.dark-mode .btn-icon:hover {
 label {
   display: grid;
   gap: 7px;
-  color: #334155;
+  color: var(--text);
   font-weight: 800;
 }
 
@@ -261,7 +273,7 @@ textarea {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 15px;
-  background: white;
+  background: var(--surface);
   padding: 13px 14px;
   font: inherit;
   color: var(--text);
@@ -310,8 +322,10 @@ textarea:focus {
   transition: transform 0.3s ease;
 }
 
-.toggle-password.active i::before {
-  content: "\f145";
+.toggle-password.active {
+  color: var(--primary);
+  background: var(--surface-tint);
+  border-radius: 8px;
 }
 
 .btn {
@@ -338,7 +352,7 @@ textarea:focus {
 }
 
 .btn-outline {
-  background: white;
+  background: var(--surface);
   color: var(--primary);
   border: 1px solid var(--border);
 }
@@ -436,7 +450,7 @@ textarea:focus {
   min-width: 110px;
   padding: 16px;
   border-radius: 18px;
-  background: #f8fbff;
+  background: var(--surface-soft);
   border: 1px solid var(--border);
   text-align: center;
 }
@@ -481,7 +495,7 @@ textarea:focus {
 .applicant-card {
   border: 1px solid var(--border);
   border-radius: 20px;
-  background: #fbfdff;
+  background: var(--surface-soft);
   padding: 18px;
   display: grid;
   gap: 12px;
@@ -502,14 +516,14 @@ textarea:focus {
 .meta span {
   padding: 7px 10px;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #1e40af;
+  background: var(--surface-tint);
+  color: var(--accent-text);
   font-size: 0.86rem;
   font-weight: 800;
 }
 
 .description {
-  color: #475569;
+  color: var(--muted);
   line-height: 1.55;
 }
 
@@ -525,7 +539,7 @@ textarea:focus {
   border: 1px dashed var(--border);
   border-radius: 18px;
   color: var(--muted);
-  background: rgba(248, 250, 252, 0.8);
+  background: var(--surface-soft);
 }
 
 @media (max-width: 900px) {
@@ -552,4 +566,86 @@ textarea:focus {
   .search {
     max-width: 100%;
   }
+}
+
+
+/* Keep user content and forms inside narrow screens and grid columns. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.logo { flex: 0 0 58px; }
+.brand > div, .topbar > *, .auth-layout > *, .grid-layout > *,
+.section-title > *, .profile-summary > *, .card, .feed, .form {
+  min-width: 0;
+}
+
+body, h1, h2, h3, p, .meta span, .badge, .steps span, .btn, .tab {
+  overflow-wrap: anywhere;
+}
+
+button, input, select, textarea { min-width: 0; }
+button { touch-action: manipulation; }
+textarea { resize: vertical; }
+.topbar-controls { flex-wrap: wrap; flex-shrink: 0; }
+.btn-icon, .toggle-password { min-height: 44px; min-width: 44px; }
+.btn { display: inline-flex; justify-content: center; align-items: center; text-align: center; text-decoration: none; }
+.card-actions { align-items: center; }
+.description { white-space: pre-wrap; }
+#appSection > .card { margin-bottom: 22px; }
+#jobForm { margin-top: 18px; }
+
+button:focus-visible, a:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+.message:empty { display: none; }
+#appMessage:not(:empty) { margin-bottom: 18px; }
+.connection-status { color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+.stats { flex-wrap: wrap; }
+.stats div { flex: 1; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+
+html.dark-mode .btn-outline { color: var(--accent-text); }
+html.dark-mode .badge { background: var(--surface-tint); }
+html.dark-mode .btn-danger { background: #431d29; color: #ffb3b9; }
+html.dark-mode .btn-success, html.dark-mode .message.success { background: #123b2d; color: #b1f5cc; }
+html.dark-mode .btn-warning { background: #45351a; color: #ffe2a0; }
+html.dark-mode .message.error { background: #431d29; color: #ffd0d3; }
+
+@media (max-width: 900px) {
+  .topbar { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .topbar-controls { margin-left: auto; }
+}
+
+@media (max-width: 480px) {
+  .container { width: calc(100% - 24px); padding-top: 18px; }
+  .card, .hero-card { padding: 18px; border-radius: 20px; }
+  .brand { align-items: flex-start; gap: 10px; }
+  .brand p { font-size: 0.9rem; line-height: 1.4; }
+  .hero-card h2 { font-size: 2.15rem; line-height: 1.08; margin-top: 8px; }
+  .hero-card p { font-size: 1rem; line-height: 1.6; }
+  .steps { margin-top: 24px; }
+  .steps div { padding: 11px; }
+  .tabs { flex-wrap: wrap; }
+  .tab { padding: 12px 8px; }
+  .stats { width: 100%; }
+  .stats div { min-width: 0; padding: 12px; }
+  .job-card, .match-card, .applicant-card { padding: 14px; }
+  .card-actions .btn { flex: 1 1 100%; }
+  input, select, textarea { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
